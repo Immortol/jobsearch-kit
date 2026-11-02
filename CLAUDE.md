@@ -21,7 +21,7 @@
 skills/        единый источник «мозга»: 7 скиллов (SKILL.md + references/assets/scripts).
                Из них же собираются ZIP для версии «в приложении Claude» (scripts/build_kit.sh).
 docs/PLAN.md   цель, этапы, критерии приёмки, бэклог
-docs/ARCHITECTURE.md   стек и устройство (черновик → утверждается в этапе 0)
+docs/ARCHITECTURE.md   стек и устройство (утверждены в этапе 0, решения 0002–0003)
 docs/decisions/        принятые решения
 docs/KIT_README.md     описание комплекта скиллов
 app/           (появится в этапе 1) серверная часть
