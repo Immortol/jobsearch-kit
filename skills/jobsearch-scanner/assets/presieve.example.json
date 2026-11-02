@@ -1,0 +1,15 @@
+{
+  "_comment": "Пример для дизайнера/PM, который ищет широко. Шаблоны — регулярные выражения без учёта регистра. Отсеивать только то, что человек явно назвал «нет» в Rules/03_Strategy.md.",
+  "max_age_days": 21,
+  "exclude_title": [
+    { "reason": "уровень выше", "pattern": "\\b(head|director|vp|principal|chief)\\b" },
+    { "reason": "стажировка", "pattern": "intern(ship)?\\b|стаж[её]р|стажировк|praktik|werkstudent|working student|trainee" },
+    { "reason": "продажи", "pattern": "\\bsales\\b|account executive|продаж|vertrieb" }
+  ],
+  "exclude_company": [
+    { "reason": "отрасль «нет»", "pattern": "casino|gambling|казино" }
+  ],
+  "protect_company": "",
+  "global_companies": "amazon|google|microsoft|meta\\b|ibm\\b|sap\\b|siemens|bosch",
+  "allowed_locations": "remote|anywhere|worldwide|europe|emea|serbia|belgrade|cyprus|limassol|armenia|yerevan|georgia|tbilisi"
+}

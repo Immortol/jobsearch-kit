@@ -1,0 +1,371 @@
+<title>Анкета поиска работы</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --ground:#F1F3F2; --surface:#FFFFFF; --surface-sunk:#E9ECEB;
+    --ink:#171A19; --ink-soft:#4B5451; --ink-faint:#7C8683;
+    --line:#D9DEDC; --line-strong:#C2C9C6; --error:#B4532A;
+    --accent:#1D5C48; --accent-soft:#E2EDE8; --accent-ink:#12402f; --on-accent:#FFFFFF;
+    --pre:#6B5A1E; --pre-soft:#F4EFDC;
+    --focus:#1D5C48; --radius:10px; --maxw:min(100%, 44rem);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#14171A; --surface:#1C2124; --surface-sunk:#22282B;
+      --ink:#ECEFEE; --ink-soft:#AEB7B4; --ink-faint:#7F8A87;
+      --line:#2E3538; --line-strong:#3D4548;
+      --accent:#5FBF9E; --accent-soft:#1B322B; --accent-ink:#9FD9C5; --on-accent:#10241D;
+      --pre:#D9C27A; --pre-soft:#2C2818; --focus:#5FBF9E; color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#14171A; --surface:#1C2124; --surface-sunk:#22282B;
+    --ink:#ECEFEE; --ink-soft:#AEB7B4; --ink-faint:#7F8A87;
+    --line:#2E3538; --line-strong:#3D4548;
+    --accent:#5FBF9E; --accent-soft:#1B322B; --accent-ink:#9FD9C5; --on-accent:#10241D;
+    --pre:#D9C27A; --pre-soft:#2C2818; --focus:#5FBF9E; color-scheme:dark;
+  }
+  *{box-sizing:border-box;}
+  body{background:var(--ground);color:var(--ink);font-family:"Source Sans 3",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;margin:0;}
+
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--ground);}
+  .bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--ground) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);}
+  .bar-inner{width:var(--maxw);margin:0 auto;padding-block:.7rem .55rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;}
+  .bar-title{font-family:"Archivo",sans-serif;font-weight:600;font-size:.95rem;letter-spacing:-0.01em;margin-right:auto;}
+  .meter{display:flex;align-items:center;gap:.5rem;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.75rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+  .meter-track{width:88px;height:5px;border-radius:99px;background:var(--surface-sunk);overflow:hidden;border:1px solid var(--line);}
+  .meter-fill{height:100%;width:0%;background:var(--accent);transition:width .25s ease;}
+  .save{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--ink-faint);white-space:nowrap;}
+  .save[data-state="saving"]{color:var(--accent);}
+  .save[data-state="error"]{color:var(--error);}
+
+  .nav{width:var(--maxw);margin:0 auto;padding-block:0 .6rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:.35rem;overflow-x:auto;scrollbar-width:thin;}
+  .nav button{flex:0 0 auto;font-family:"IBM Plex Mono",monospace;font-size:.72rem;padding:.28rem .55rem;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);cursor:pointer;}
+  .nav button:hover{border-color:var(--line-strong);color:var(--ink);}
+  .nav button[data-done="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink);}
+
+  .wrap{width:var(--maxw);margin:0 auto;padding-block:1.75rem 4rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));}
+  .lede h1{font-family:"Archivo",sans-serif;font-weight:700;font-size:clamp(1.5rem,4.5vw,2rem);line-height:1.15;letter-spacing:-0.02em;margin:0 0 .5rem;text-wrap:balance;}
+  .lede p{margin:0 0 .6rem;color:var(--ink-soft);max-width:62ch;}
+  .note{margin-top:1rem;padding:.7rem .85rem;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;font-size:.92rem;color:var(--ink-soft);}
+
+  section{margin-top:2.5rem;scroll-margin-top:7.5rem;}
+  .sec-head{display:flex;align-items:baseline;gap:.6rem;margin-bottom:.35rem;}
+  .sec-code{font-family:"IBM Plex Mono",monospace;font-size:.78rem;color:var(--accent);font-weight:500;}
+  .sec-head h2{font-family:"Archivo",sans-serif;font-weight:600;font-size:1.18rem;letter-spacing:-0.015em;margin:0;text-wrap:balance;}
+  .sec-why{color:var(--ink-faint);font-size:.9rem;margin:0 0 1.1rem;max-width:60ch;}
+
+  .q{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:.9rem 1rem 1rem;margin-bottom:.6rem;}
+  .q.answered{border-color:var(--line-strong);}
+  .q.skipped{opacity:.55;}
+  .q-top{display:flex;gap:.55rem;align-items:baseline;}
+  .q-id{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--ink-faint);flex:0 0 auto;padding-top:.15rem;}
+  .q.answered .q-id{color:var(--accent);}
+  .q-label{display:block;font-weight:600;line-height:1.4;}
+  .hint{color:var(--ink-soft);font-size:.88rem;margin:.25rem 0 0;}
+  .field{margin-top:.6rem;}
+  .q-foot{display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-top:.45rem;min-height:1.4rem;}
+  .badge{font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--pre);background:var(--pre-soft);border-radius:99px;padding:.1rem .5rem;}
+  .skip{font:inherit;font-size:.8rem;color:var(--ink-faint);background:none;border:none;cursor:pointer;padding:.1rem .2rem;margin-left:auto;text-decoration:underline;text-underline-offset:2px;}
+  .skip:hover{color:var(--ink);}
+
+  input[type="text"],textarea{width:100%;font:inherit;color:var(--ink);background:var(--surface-sunk);border:1px solid var(--line);border-radius:8px;padding:.5rem .6rem;resize:vertical;}
+  textarea{min-height:3.2rem;line-height:1.5;}
+  input[type="text"]:focus-visible,textarea:focus-visible,.chip:focus-visible,.nav button:focus-visible,.ghost:focus-visible,.skip:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+  .chips{display:flex;flex-wrap:wrap;gap:.35rem;}
+  .chip{font:inherit;font-size:.88rem;padding:.25rem .65rem;border-radius:99px;border:1px solid var(--line-strong);background:var(--surface-sunk);color:var(--ink-soft);cursor:pointer;}
+  .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);}
+  .chips + textarea{margin-top:.45rem;}
+
+  .tail{margin-top:3rem;border-top:1px solid var(--line);padding-top:1.4rem;}
+  .tail p{color:var(--ink-soft);margin:0 0 1rem;}
+  .ghost{font:inherit;font-size:.9rem;padding:.45rem .8rem;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer;}
+  .ghost:hover{border-color:var(--accent);color:var(--accent-ink);}
+  #dump{margin-top:1rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:.9rem;font-family:"IBM Plex Mono",monospace;font-size:.78rem;line-height:1.5;white-space:pre-wrap;overflow-x:auto;max-height:24rem;overflow-y:auto;}
+  @media (prefers-reduced-motion: reduce){*{transition:none !important;}}
+</style>
+
+<div class="bar">
+  <div class="bar-inner">
+    <span class="bar-title" id="bartitle"></span>
+    <span class="meter"><span class="meter-track"><span class="meter-fill" id="fill"></span></span><span id="count">0/0</span></span>
+    <span class="save" id="save" data-state="idle">—</span>
+  </div>
+  <nav class="nav" id="nav"></nav>
+</div>
+
+<div class="wrap">
+  <div class="lede">
+    <h1 id="h1"></h1>
+    <p id="intro1"></p>
+    <p id="intro2"></p>
+    <div class="note" id="storenote"></div>
+  </div>
+  <main id="form"></main>
+  <div class="tail">
+    <p id="tailtext"></p>
+    <button class="ghost" id="dumpbtn" type="button"></button>
+    <pre id="dump" hidden></pre>
+  </div>
+</div>
+
+<script>
+/* Jobsearch-Kit · анкета v1.
+   Данные: db intake/prefill (заполняет Claude: lang, name, values, extra) и intake/answers (пишет страница). */
+const L = (ru, en) => ({ru, en});
+const UI = {
+  bar: L("Анкета поиска работы","Job search questionnaire"),
+  h1: L("Чтобы искать точнее","So we can search smarter"),
+  h1name: L("{name}, чтобы искать точнее","{name}, so we can search smarter"),
+  intro1: L("Ответы сохраняются сами — можно закрыть страницу и вернуться когда угодно, хоть с телефона. Отвечать по порядку не нужно, любой вопрос можно пропустить.",
+            "Answers save automatically — close the page and come back any time, even from your phone. No need to go in order, and you can skip any question."),
+  intro2: L("Жёлтая метка «из резюме» — я заполнил это сам по твоему резюме. Просто проверь и поправь, если что-то не так.",
+            "A yellow “from CV” tag means I filled it in from your CV. Just check it and fix anything that’s off."),
+  loading: L("Загружаю сохранённые ответы…","Loading saved answers…"),
+  savedNote: L("Ответы сохраняются автоматически. Когда закончишь — или устанешь — напиши в чате «заполнил», и я всё прочитаю.",
+               "Answers save automatically. When you’re done — or just tired — write “done” in the chat and I’ll read everything."),
+  localNote: L("Сохранение здесь недоступно — ответы держатся в этом браузере. Когда закончишь, нажми внизу «Показать ответы текстом» и пришли их мне в чат.",
+               "Saving isn’t available here — answers stay in this browser. When you’re done, press “Show answers as text” below and paste them into the chat."),
+  tail: L("Всё, что пропущено, — не страшно. Вернёмся к этому, только если понадобится.","Anything skipped is fine. We’ll come back to it only if it’s needed."),
+  dump: L("Показать ответы текстом","Show answers as text"),
+  skip: L("пропустить","skip"), unskip: L("вернуть","undo skip"),
+  fromCv: L("из резюме","from CV"),
+  noteph: L("Уточнение, если хочешь","Add a note if you like"),
+  saving: L("сохраняю…","saving…"), saved: L("сохранено","saved"), savedLocal: L("сохранено в браузере","saved in browser"), failed: L("не сохранилось","not saved"),
+  none: L("— не отвечено","— no answer"), skipped: L("— пропущено","— skipped"),
+};
+
+const SECTIONS = [
+ { code:"A", title:L("Что ищем","What we’re looking for"),
+   why:L("По этому я буду подбирать вакансии. Чем шире ответ про географию — тем больше вариантов я найду.","This is how I’ll pick vacancies. The broader your answer on location, the more options I’ll find."),
+   qs:[
+    {id:"a1", t:L("Какие роли тебе интересны?","Which roles interest you?"), hint:L("Можно несколько. Не знаешь, как это называется на рынке, — опиши, что хочешь делать.","Several is fine. If you don’t know the market name, describe what you want to do."), type:"area"},
+    {id:"a2", t:L("Какие роли точно нет?","Which roles are a definite no?"), hint:L("Например: продажи, руководство людьми, только поддержка.","For example: sales, managing people, support-only."), type:"area"},
+    {id:"a3", t:L("На какой уровень претендуешь?","What level are you aiming for?"), type:"chips", opts:[L("Начальный","Entry"),L("Средний","Mid"),L("Старший","Senior"),L("Руководитель","Lead / head"),L("Не уверен(а)","Not sure")], note:true},
+    {id:"a4", t:L("Где ты живёшь сейчас?","Where do you live now?"), hint:L("Город и страна.","City and country."), type:"text"},
+    {id:"a5", t:L("Удалённо на компании из других стран — интересно?","Remote work for companies in other countries — interested?"), type:"chips", opts:[L("Да","Yes"),L("Нет","No"),L("Не думал(а) — расскажи варианты","Haven’t thought — show me options")]},
+    {id:"a6", t:L("Переезд — возможен?","Would you relocate?"), hint:L("Если да — куда в принципе (страны, города). Виза, язык, семья — всё, что важно.","If yes — where, in principle. Visa, language, family — anything that matters."), type:"chips", opts:[L("Да, почти куда угодно","Yes, almost anywhere"),L("Да, в определённые места","Yes, to certain places"),L("Нет","No"),L("Не думал(а)","Haven’t thought")], note:true},
+    {id:"a7", t:L("Какой формат подходит?","Which formats work for you?"), hint:L("Можно выбрать несколько.","Pick as many as you like."), type:"multi", opts:[L("Полная ставка","Full-time"),L("Частичная","Part-time"),L("Проект / контракт","Project / contract"),L("Фриланс","Freelance"),L("Офис","Office"),L("Гибрид","Hybrid"),L("Удалённо","Remote")]},
+    {id:"a8", t:L("На каких языках можешь работать?","Which languages can you work in?"), hint:L("И насколько уверенно: свободно / рабочий / базовый. Есть ли сертификаты.","And how confidently: fluent / working / basic. Any certificates?"), type:"area"},
+    {id:"a9", t:L("На каком языке готовим документы по умолчанию?","Default language for your documents?"), type:"text"},
+    {id:"a10", t:L("Деньги: минимум и что называть работодателю","Pay: your minimum and what to tell employers"), hint:L("Ниже какой суммы нет смысла? Если не хочешь отвечать — пропусти.","Below what amount is it not worth it? Skip if you’d rather not say."), type:"area"},
+    {id:"a11", t:L("Насколько срочно нужна работа?","How urgently do you need a job?"), type:"chips", opts:[L("Очень срочно","Very urgent"),L("1–3 месяца","1–3 months"),L("3–6 месяцев","3–6 months"),L("Срока нет","No deadline")], note:true},
+    {id:"a12", t:L("Отрасли и компании: куда хочется, куда точно нет","Industries and companies: where you’d love to work, where never"), type:"area"},
+    {id:"a13", t:L("Есть знакомые в компаниях, сообщества, чаты выпускников?","Do you have contacts in companies, alumni groups, professional chats?"), hint:L("Рекомендация — самый сильный способ попасть на собеседование. Даже «знаю пару человек в X» — уже полезно.","A referral is the strongest way into an interview. Even “I know a couple of people at X” helps."), type:"area"},
+ ]},
+ { code:"B", title:L("Твои достижения","Your achievements"),
+   why:L("Резюме сильнее, когда в нём конкретные результаты — и ты уверенно расскажешь о каждом на собеседовании.","A CV is stronger with concrete results — ones you can confidently talk about in an interview."),
+   qs:[
+    {id:"b1", t:L("Что стало лучше на прошлых местах работы благодаря тебе?","What got better at past jobs because of you?"), hint:L("Запустил, ускорил, упростил, спас, собрал команду — всё считается.","Launched, sped up, simplified, rescued, built a team — it all counts."), type:"area"},
+    {id:"b2", t:L("Какие результаты можно выразить цифрами — и откуда цифры?","Which results can you put in numbers — and where do the numbers come from?"), hint:L("Только те, что ты сможешь объяснить, если спросят «как считали».","Only ones you could explain if asked “how was that measured?”"), type:"area"},
+    {id:"b3", t:L("Есть в старом резюме что-то, что звучит сильнее, чем было на самом деле?","Is anything in your old CV stronger-sounding than it really was?"), hint:L("Это нормально — уберём или переформулируем честно, чтобы на собеседовании не было неловко.","That’s normal — we’ll remove or reword it honestly so interviews don’t get awkward."), type:"area"},
+ ]},
+ { code:"C", title:L("Истории для собеседований","Interview stories"),
+   why:L("Эти вопросы задают почти везде. Хватит пары предложений: что было → что ты сделал(а) → чем кончилось. Отшлифуем потом вместе.","These come up almost everywhere. A couple of sentences is enough: what happened → what you did → how it ended. We’ll polish later together."),
+   qs:[
+    {id:"c1", t:L("Конфликт или трудный человек в команде","A conflict or a difficult person on the team"), type:"area"},
+    {id:"c2", t:L("Что-то не получилось — и что ты из этого вынес(ла)","Something that didn’t work out — and what you learned"), type:"area"},
+    {id:"c3", t:L("Почему ушёл(ла) или уходишь с последнего места?","Why did you leave (or are leaving) your last job?"), hint:L("Честно и без негатива о людях — сформулируем один раз и хорошо.","Honestly, without blaming people — we’ll phrase it well once."), type:"area"},
+    {id:"c4", t:L("Чем гордишься больше всего?","What are you most proud of?"), type:"area"},
+ ]},
+ { code:"D", title:L("Как ты хочешь звучать","How you want to come across"),
+   why:L("Здесь решаем, что показывать первым и как спокойно объяснять сложные места.","Here we decide what to show first and how to calmly explain the tricky parts."),
+   qs:[
+    {id:"d1", t:L("Как бы ты описал(а) себя профессионально одной фразой?","How would you describe yourself professionally in one sentence?"), hint:L("Своими словами, как сказал(а) бы вслух.","In your own words, as you’d say it out loud."), type:"area"},
+    {id:"d2", t:L("Что в твоём опыте показывать первым — а что не первым?","What in your background should come first — and what shouldn’t?"), type:"area"},
+    {id:"d3", t:L("Есть сложные места, которые хочется объяснить аккуратно?","Anything you’d like to explain carefully?"), hint:L("Перерывы, частые смены работы, смена профессии, переезд, незаконченное обучение. Как тебе комфортно об этом говорить?","Gaps, frequent job changes, a career switch, a move, unfinished studies. How are you comfortable talking about it?"), type:"area"},
+    {id:"d4", t:L("Разрешение на работу в стране поиска","Work authorisation in your target country"), hint:L("Без подробностей — только то, что нужно для поиска.","No details — only what matters for the search."), type:"chips", opts:[L("Есть","I have it"),L("Нужна виза / спонсорство","Need a visa / sponsorship"),L("Не знаю","Not sure")], note:true},
+    {id:"d5", t:L("Фото в резюме","Photo on your CV"), type:"chips", opts:[L("Да","Yes"),L("Нет","No"),L("Как принято в стране","Whatever is usual there")]},
+    {id:"d6", t:L("Если уже искал(а): где обычно всё обрывается?","If you’ve been searching: where does it usually stop?"), hint:L("Примерно сколько откликов и приглашений было — если помнишь.","Roughly how many applications and interviews — if you remember."), type:"chips", opts:[L("Тишина после отклика","Silence after applying"),L("Отказ после первого звонка","No after the first call"),L("После собеседований","After interviews"),L("На финале","At the final stage"),L("Ещё не искал(а)","Haven’t searched yet")], note:true},
+ ]},
+ { code:"E", title:L("Как будем работать","How we’ll work"),
+   why:L("Подстроим систему под твоё время и комфорт. Всё можно поменять позже.","We’ll fit the system to your time and comfort. You can change anything later."),
+   qs:[
+    {id:"e1", t:L("Насколько много мне делать самому?","How much should I do on my own?"), hint:L("Lite — ты присылаешь ссылки, я оцениваю и готовлю документы. Standard — плюс каждую ночь сам смотрю почту и новые вакансии, утром короткая сводка; раз в неделю обзор (рекомендую). Pro — плюс программа-сканер вакансий на твоём компьютере, ставится один раз.",
+      "Lite — you send links, I assess and prepare documents. Standard — plus every night I check your mail and new vacancies and send a short morning summary; a weekly review (recommended). Pro — plus a vacancy scanner on your computer, installed once."),
+      type:"chips", opts:[L("Lite","Lite"),L("Standard","Standard"),L("Pro","Pro"),L("Не знаю — посоветуй","Not sure — advise me")]},
+    {id:"e2", t:L("Сколько часов в неделю готов(а) уделять поиску?","How many hours a week can you give the search?"), hint:L("Лучше три хорошо поданных отклика, чем пятнадцать непрочитанных.","Three solid applications beat fifteen unread ones."), type:"chips", opts:[L("До 3","Up to 3"),L("3–7","3–7"),L("7–15","7–15"),L("Больше 15","15+")]},
+    {id:"e3", t:L("Что мне можно делать с твоей почтой?","What may I do with your email?"), hint:L("Отправляешь письма всегда только ты.","You always send emails yourself."), type:"chips", opts:[L("Ничего","Nothing"),L("Только читать","Read only"),L("Читать и ставить ярлыки","Read and label"),L("Плюс черновики ответов","Plus draft replies"),L("Плюс убирать уведомления в корзину","Plus bin automatic notices")]},
+    {id:"e4", t:L("Отдельный почтовый ящик под поиск","A separate mailbox for the search"), hint:L("Так спокойнее: в нём только письма о работе.","Calmer that way: it holds only job mail."), type:"chips", opts:[L("Есть","I have one"),L("Создам","I’ll create one"),L("Нет, основной","No, use my main one")]},
+    {id:"e5", t:L("На каком языке нам с тобой общаться?","Which language should we talk in?"), type:"text"},
+    {id:"e6", t:L("Ставить тебе в календарь по будням 30 минут «подать заявки»?","Add a 30-minute “apply” slot to your calendar on weekdays?"), type:"chips", opts:[L("Да","Yes"),L("Нет","No")]},
+    {id:"e7", t:L("О чём я не спросил, но стоит знать?","Anything I didn’t ask but should know?"), type:"area"},
+ ]},
+];
+
+let LANG = "ru";
+const tr = o => (o && (o[LANG] || o.ru)) || "";
+const state = { values:{}, skipped:{} };
+let prefill = { values:{} }, extra = [], dbDoc = null, saveTimer = null, loaded = false;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function allQs(){ const out=[]; SECTIONS.forEach(s=>s.qs.forEach(q=>out.push([s,q]))); return out; }
+
+function mergeExtra(){
+  // Дополнительные вопросы под человека (например, проверка цифр из его резюме) — из intake/prefill.extra
+  extra.forEach(x=>{
+    const sec = SECTIONS.find(s=>s.code===(x.section||"B")) || SECTIONS[1];
+    if (sec.qs.some(q=>q.id===x.id)) return;
+    sec.qs.push({ id:x.id, t:L(x.t, x.t_en||x.t), hint: x.hint ? L(x.hint, x.hint_en||x.hint) : null, type: x.type||"area", opts:(x.opts||[]).map(o=>L(o,o)) });
+  });
+}
+
+function render(){
+  document.documentElement.lang = LANG;
+  $("bartitle").textContent = tr(UI.bar);
+  $("h1").textContent = prefill.name ? tr(UI.h1name).replace("{name}", prefill.name) : tr(UI.h1);
+  $("intro1").textContent = tr(UI.intro1);
+  $("intro2").textContent = tr(UI.intro2);
+  $("intro2").hidden = !Object.keys(prefill.values||{}).length;
+  $("tailtext").textContent = tr(UI.tail);
+  $("dumpbtn").textContent = tr(UI.dump);
+  $("nav").innerHTML = ""; $("form").innerHTML = "";
+  SECTIONS.forEach(sec=>{
+    const b=document.createElement("button"); b.type="button"; b.textContent=sec.code+" · "+tr(sec.title); b.id="nav-"+sec.code;
+    b.addEventListener("click",()=>$("sec-"+sec.code).scrollIntoView({behavior:"smooth",block:"start"}));
+    $("nav").appendChild(b);
+    const el=document.createElement("section"); el.id="sec-"+sec.code;
+    let h='<div class="sec-head"><span class="sec-code">'+sec.code+'</span><h2>'+esc(tr(sec.title))+'</h2></div><p class="sec-why">'+esc(tr(sec.why))+'</p>';
+    sec.qs.forEach(q=>{
+      h+='<div class="q" id="q-'+q.id+'"><div class="q-top"><span class="q-id">'+q.id.toUpperCase()+'</span><div style="flex:1;min-width:0">';
+      h+='<label class="q-label" for="i-'+q.id+'">'+esc(tr(q.t))+'</label>';
+      if(q.hint) h+='<p class="hint">'+esc(tr(q.hint))+'</p>';
+      h+='<div class="field">';
+      if(q.type==="text") h+='<input type="text" id="i-'+q.id+'" data-q="'+q.id+'" autocomplete="off">';
+      else if(q.type==="area") h+='<textarea id="i-'+q.id+'" data-q="'+q.id+'" rows="2"></textarea>';
+      else {
+        h+='<div class="chips" id="i-'+q.id+'" role="group">';
+        q.opts.forEach(o=>{ const v=tr(o); h+='<button type="button" class="chip" data-q="'+q.id+'" data-v="'+esc(v)+'" data-multi="'+(q.type==="multi")+'" aria-pressed="false">'+esc(v)+'</button>'; });
+        h+='</div>';
+        if(q.note) h+='<textarea data-q="'+q.id+'-note" rows="1" placeholder="'+esc(tr(UI.noteph))+'"></textarea>';
+      }
+      h+='</div><div class="q-foot"><span class="badge" id="b-'+q.id+'" hidden>'+esc(tr(UI.fromCv))+'</span><button type="button" class="skip" data-skip="'+q.id+'"></button></div>';
+      h+='</div></div></div>';
+    });
+    el.innerHTML=h; $("form").appendChild(el);
+  });
+  applyState();
+}
+
+function autosize(t){ t.style.height="auto"; t.style.height=Math.max(t.scrollHeight,42)+"px"; }
+const filled = id => { const v=state.values[id]; return Array.isArray(v) ? v.length>0 : !!(v && String(v).trim()); };
+
+function refreshMarks(){
+  let n=0, total=0;
+  SECTIONS.forEach(sec=>{
+    let secDone=true;
+    sec.qs.forEach(q=>{
+      total++;
+      const done = filled(q.id) || !!state.skipped[q.id];
+      if(done) n++; else secDone=false;
+      const card=$("q-"+q.id); if(!card) return;
+      card.classList.toggle("answered", filled(q.id));
+      card.classList.toggle("skipped", !!state.skipped[q.id] && !filled(q.id));
+      const sk=card.querySelector("[data-skip]"); sk.textContent = state.skipped[q.id] ? tr(UI.unskip) : tr(UI.skip);
+      const pv=(prefill.values||{})[q.id]; const badge=$("b-"+q.id);
+      badge.hidden = !(pv!=null && JSON.stringify(pv)===JSON.stringify(state.values[q.id]));
+    });
+    const nb=$("nav-"+sec.code); if(nb) nb.dataset.done = String(secDone);
+  });
+  $("count").textContent=n+"/"+total;
+  $("fill").style.width=(total? n/total*100:0).toFixed(1)+"%";
+}
+
+function applyState(){
+  document.querySelectorAll("[data-q]").forEach(el=>{
+    const k=el.dataset.q, v=state.values[k];
+    if(el.classList.contains("chip")){
+      const on = Array.isArray(v) ? v.includes(el.dataset.v) : v===el.dataset.v;
+      el.setAttribute("aria-pressed", on?"true":"false");
+    } else {
+      if(v!=null && el.value!==v) el.value=v;
+      if(el.tagName==="TEXTAREA") autosize(el);
+    }
+  });
+  refreshMarks();
+}
+
+function scheduleSave(){
+  if(!loaded) return;
+  $("save").dataset.state="saving"; $("save").textContent=tr(UI.saving);
+  clearTimeout(saveTimer); saveTimer=setTimeout(persist,800);
+}
+let writing=false, again=false;
+async function persist(){
+  if(writing){ again=true; return; }
+  writing=true;
+  const payload={ values:state.values, skipped:state.skipped, updatedAt:new Date().toISOString() };
+  try{
+    if(dbDoc){ await dbDoc.set(payload); $("save").textContent=tr(UI.saved); }
+    else { localStorage.setItem("jobsearch-anketa", JSON.stringify(payload)); $("save").textContent=tr(UI.savedLocal); }
+    $("save").dataset.state="idle";
+  }catch(e){ $("save").dataset.state="error"; $("save").textContent=tr(UI.failed); }
+  writing=false;
+  if(again){ again=false; persist(); }
+}
+
+document.addEventListener("input", e=>{
+  const el=e.target; if(!el.dataset || !el.dataset.q) return;
+  if(el.tagName==="TEXTAREA") autosize(el);
+  state.values[el.dataset.q]=el.value;
+  if(el.value.trim()) delete state.skipped[el.dataset.q.replace(/-note$/,"")];
+  refreshMarks(); scheduleSave();
+});
+document.addEventListener("click", e=>{
+  const sk=e.target.closest("[data-skip]");
+  if(sk){ const k=sk.dataset.skip; if(state.skipped[k]) delete state.skipped[k]; else state.skipped[k]=true; refreshMarks(); scheduleSave(); return; }
+  const chip=e.target.closest(".chip"); if(!chip) return;
+  const k=chip.dataset.q, v=chip.dataset.v;
+  if(chip.dataset.multi==="true"){
+    const arr=Array.isArray(state.values[k])? [...state.values[k]] : [];
+    const i=arr.indexOf(v); if(i>=0) arr.splice(i,1); else arr.push(v);
+    state.values[k]=arr;
+  } else state.values[k] = state.values[k]===v ? "" : v;
+  delete state.skipped[k];
+  applyState(); scheduleSave();
+});
+
+$("dumpbtn").addEventListener("click",()=>{
+  const d=$("dump"); if(!d.hidden){ d.hidden=true; return; }
+  let out="";
+  SECTIONS.forEach(sec=>{
+    out+="\n## "+sec.code+". "+tr(sec.title)+"\n";
+    sec.qs.forEach(q=>{
+      const v=state.values[q.id]; const txt=Array.isArray(v)? v.join(", ") : (v||"").trim();
+      const note=(state.values[q.id+"-note"]||"").trim();
+      out+="\n"+q.id.toUpperCase()+". "+tr(q.t)+"\n"+(txt|| (state.skipped[q.id]? tr(UI.skipped): tr(UI.none)))+(note? "  ("+note+")":"")+"\n";
+    });
+  });
+  d.textContent=out.trim(); d.hidden=false; d.scrollIntoView({behavior:"smooth",block:"nearest"});
+});
+
+(async function init(){
+  $("storenote").textContent = tr(UI.loading);
+  render();
+  let db=null;
+  try{ db = await (window.claude && window.claude.use ? window.claude.use("db") : null); }catch(e){ db=null; }
+  let saved=null;
+  if(db){
+    try{
+      const p = await db.doc("intake/prefill").get();
+      if(p.exists){ const d=p.data(); prefill={ name:d.name||"", values:{...(d.values||{})} }; extra=Array.isArray(d.extra)? d.extra:[]; if(d.lang==="en"||d.lang==="ru") LANG=d.lang; }
+      dbDoc = db.doc("intake/answers");
+      const a = await dbDoc.get();
+      if(a.exists) saved=a.data();
+    }catch(e){ dbDoc=null; }
+  }
+  if(!dbDoc){ try{ const raw=localStorage.getItem("jobsearch-anketa"); if(raw) saved=JSON.parse(raw); }catch(e){} }
+  if(saved){ state.values={...(saved.values||{})}; state.skipped={...(saved.skipped||{})}; }
+  else { state.values={...(prefill.values||{})}; }
+  mergeExtra();
+  render();
+  $("storenote").textContent = dbDoc ? tr(UI.savedNote) : tr(UI.localNote);
+  loaded=true;
+  $("save").textContent = saved ? tr(dbDoc? UI.saved : UI.savedLocal) : "—";
+})();
+</script>
