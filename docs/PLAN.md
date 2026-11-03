@@ -14,7 +14,7 @@ Statuses: `done` · `in progress` · `next` · `later`.
 | # | Stage | What Alexander checks (acceptance) | Status |
 |---|---|---|---|
 | 0 | Repository, CLAUDE.md, plan, architecture (draft), skills in repo, ZIP build | architecture approved ("go" on `ARCHITECTURE.md`); ZIPs from `dist/` match kit v1.1 | done |
-| 1 | Skeleton: service on Railway, Postgres, email-link login, API key storage (encrypted), user rules | logs in via a link from an email, enters a key, sees an empty panel | next |
+| 1 | Skeleton: service on Railway, Postgres, email-link login, API key storage (encrypted), user rules | logs in via a link from an email, enters a key, sees an empty panel | in progress |
 | 2 | "Brain": skills-based agent via the API + chat in the panel | writes "here is a vacancy <link>" in chat → gets an assessment per their rules | later |
 | 3 | Questionnaire and CV: questionnaire in the panel, rules from answers, master CV (DOCX/PDF) | goes through setup as a new user, downloads the CV | later |
 | 4 | Vacancies: application package (PDF letter), tracker in the panel (+ export to Google Sheets) | one real package; a row in the tracker | later |
