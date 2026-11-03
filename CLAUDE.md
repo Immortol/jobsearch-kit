@@ -35,7 +35,7 @@ Edits in `skills/` change both product versions (web and the Claude-app kit). Wh
 ## Commands
 (filled in as they appear: run, tests, migrations)
 - `scripts/build_kit.sh` — build `dist/*.zip` skills for the Claude app.
-- Local setup: Postgres 16 with databases `jsk_dev` and `jsk_test` (user/password `jsk`), `pip install -r requirements-dev.txt`, copy `.env.example` to `.env`.
+- Local setup: Postgres 16+ (production runs 18) with databases `jsk_dev` and `jsk_test` (user/password `jsk`), `pip install -r requirements-dev.txt`, copy `.env.example` to `.env`.
 - `python -m pytest` — tests (use `jsk_test`, never `jsk_dev`). CI runs the same on every PR.
 - `alembic upgrade head` — apply migrations; `alembic revision --autogenerate -m "<what>"` — new migration after changing `app/models.py`.
 - `uvicorn app.main:app --reload` — run locally; in `APP_ENV=dev` sign-in links are printed to the console.
