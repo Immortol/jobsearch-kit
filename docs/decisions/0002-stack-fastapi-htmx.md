@@ -1,19 +1,19 @@
-# 0002 · Стек: FastAPI + серверный HTML (Jinja + HTMX) — 2026-11-02
+# 0002 · Stack: FastAPI + server-rendered HTML (Jinja + HTMX) — 2026-11-02
 
-**Контекст.** Этап 0: нужно выбрать стек веб-панели. 2–5 пользователей, один разработчик-ассистент, владелец не пишет код и проверяет по чек-листам. Хостинг — Railway (решение 0001). Нужны формы, таблицы и чат с потоковым ответом.
+**Context.** Stage 0: choose the web panel stack. 2–5 users, one assistant developer; the owner does not write code and reviews against checklists. Hosting — Railway (decision 0001). Needed: forms, tables and a chat with a streaming response.
 
-**Решение.**
-- Бэкенд и страницы — один сервис на Python: FastAPI, HTML рендерится на сервере (Jinja), интерактивность — HTMX; чат — потоковый ответ через SSE.
-- Сложные экраны в будущем — точечно на JS поверх тех же эндпоинтов, без отдельного фронтенд-приложения.
-- Ночные задачи — тот же код Python, отдельный сервис `worker` по расписанию (см. 0003).
-- База — Postgres на Railway.
+**Decision.**
+- Backend and pages — one Python service: FastAPI, HTML rendered on the server (Jinja), interactivity via HTMX; chat streams over SSE.
+- Complex screens later — targeted JS on top of the same endpoints, no separate frontend application.
+- Nightly jobs — the same Python code, a separate scheduled `worker` service (see 0003).
+- Database — Postgres on Railway.
 
-**Почему.**
-- Самый короткий путь до работающей панели: одна кодовая база, одна сборка, без CORS.
-- Один язык с ботом Visited — знакомые инструменты у владельца.
-- Скрипты скиллов (`make_letter.py` и др.) уже на Python — вызываются напрямую.
-- Путь отступления есть: если панель перерастёт HTMX, отдельный фронтенд добавляется поверх того же API без переписывания бэкенда.
+**Why.**
+- Shortest path to a working panel: one codebase, one build, no CORS.
+- Same language as the Visited bot — tooling the owner knows.
+- The skill scripts (`make_letter.py` etc.) are already Python — called directly.
+- There is a way out: if the panel outgrows HTMX, a separate frontend can be added on top of the same API without rewriting the backend.
 
-**Отвергли.**
-- B. Python API + отдельный фронтенд (Next.js) — лучше для «богатого» UI, но две кодовые базы, CORS, две сборки и деплоя; для MVP на 2–5 человек избыточно.
-- C. Всё на TypeScript (Next.js) — один сервис, но другой язык, чем у Visited и у скриптов скиллов.
+**Rejected.**
+- B. Python API + separate frontend (Next.js) — better for a "rich" UI, but two codebases, CORS, two builds and deploys; overkill for an MVP for 2–5 people.
+- C. All TypeScript (Next.js) — one service, but a different language from Visited and from the skill scripts.

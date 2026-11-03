@@ -1,53 +1,54 @@
-# Архитектура
+# Architecture
 
-> Статус: **утверждена 2026-11-02** (этап 0). Ключевые решения: `docs/decisions/0002-stack-fastapi-htmx.md`, `docs/decisions/0003-scanner-inside-worker.md`.
+> Status: **approved 2026-11-02** (stage 0). Key decisions: `docs/decisions/0002-stack-fastapi-htmx.md`, `docs/decisions/0003-scanner-inside-worker.md`.
 
-## Принципы
-1. **Просто и дёшево в эксплуатации**: 2–5 пользователей, один разработчик-ассистент. Минимум сервисов.
-2. **Скиллы — единый источник поведения.** Веб не переписывает логику из `skills/`, а исполняет её.
-3. **BYOK**: каждый вызов Claude — ключом пользователя; расход виден в его консоли Anthropic.
-4. **Данные человека — его**: экспорт и удаление по кнопке с первого дня (DSGVO).
+## Principles
+1. **Simple and cheap to run**: 2–5 users, one assistant developer. As few services as possible.
+2. **Skills are the single source of behaviour.** The web app does not rewrite the logic from `skills/`; it executes it.
+3. **BYOK**: every Claude call uses the user's key; the spend is visible in their Anthropic console.
+4. **A person's data is theirs**: export and deletion at the push of a button from day one (GDPR).
 
-## Стек — выбран A (решение 0002)
+## Stack — option A chosen (decision 0002)
 
-Сравнение вариантов, по которому принималось решение:
+The comparison the decision was based on:
 
-| | **A. Python: FastAPI + серверный HTML (Jinja + HTMX)** ✅ | B. Python API + отдельный фронтенд (Next.js) | C. Всё на TypeScript (Next.js) |
+| | **A. Python: FastAPI + server-rendered HTML (Jinja + HTMX)** ✅ | B. Python API + separate frontend (Next.js) | C. All TypeScript (Next.js) |
 |---|---|---|---|
-| Сервисов | 1 веб + фоновые задачи | 2 | 1 |
-| Язык | один — Python, как Visited | два | один, но не тот, что у Visited |
-| Чат с потоковым ответом | да (SSE) | да | да |
-| «Богатая» панель в будущем | средне: HTMX покрывает формы, таблицы, чат; сложные экраны — точечно на JS | лучше всего | лучше всего |
-| Скорость до MVP | быстрее всего | медленнее (две кодовые базы, CORS, сборка) | средне |
-| Риск | при росте UI может понадобиться фронтенд-фреймворк — переход постепенный | больше движущихся частей | Александр меньше знаком |
+| Services | 1 web + background jobs | 2 | 1 |
+| Language | one — Python, like Visited | two | one, but not the one Visited uses |
+| Streaming chat | yes (SSE) | yes | yes |
+| "Rich" panel later | medium: HTMX covers forms, tables, chat; complex screens — targeted JS | best | best |
+| Speed to MVP | fastest | slower (two codebases, CORS, build) | medium |
+| Risk | a frontend framework may be needed as the UI grows — gradual transition | more moving parts | less familiar to Alexander |
 
-**Выбрано A.** Самый короткий путь до работающей панели и один язык с Visited. Если панель перерастёт HTMX, отдельный фронтенд добавляется поверх того же API без переписывания бэкенда.
+**Chosen: A.** The shortest path to a working panel and the same language as Visited. If the panel outgrows HTMX, a separate frontend can be added on top of the same API without rewriting the backend.
 
-## Устройство
+## Layout
 ```
 Railway project "jobsearch-kit"
-├─ web        FastAPI: панель, чат (SSE), анкета, трекер, вебхук входящей почты
-├─ worker     тот же код + Node в образе, cron по ночам — одна последовательная цепочка:
-│             сканер (career-ops v1.32.0 + presieve из skills/jobsearch-scanner/assets)
-│             → предотсев → оценка (Batch) → пакеты → сводка   (решение 0003)
-└─ postgres   пользователи, правила, вакансии, трекер, задачи, история чата
+├─ web        FastAPI: panel, chat (SSE), questionnaire, tracker, inbound email webhook
+├─ worker     same code + Node in the image, nightly cron — one sequential chain:
+│             scanner (career-ops v1.32.0 + presieve from skills/jobsearch-scanner/assets)
+│             → presieve → assessment (Batch) → packages → digest   (decision 0003)
+└─ postgres   users, rules, vacancies, tracker, jobs, chat history
 ```
-В базу пишет только Python-код; сканер отдаёт результат worker'у.
-- **Вход**: ссылка на почту (magic link). Без паролей.
-- **Почта**: один провайдер на исходящие (вход, сводка) и входящие (уникальный адрес на пользователя для пересылки рассылок и ответов работодателей) — Postmark или Mailgun; выбор в этапе 1.
-- **API-ключ** пользователя: хранится шифрованным (ключ шифрования — переменная окружения), в логи не попадает.
-- **Модели**: Haiku — массовая оценка вакансий и разбор почты; Sonnet — документы, интервью, обзор. Кэширование правил пользователя; ночью — Batch API (−50%).
-- **Файлы** (резюме, письма PDF): генерируются на сервере, хранятся в объектном хранилище Railway.
-- **Трекер**: таблица в панели; выгрузка в Google Таблицу — через сервисный аккаунт (без OAuth пользователя), этап 4.
+Only Python code writes to the database; the scanner hands its output to the worker.
 
-## Скиллы в вебе
-Скиллы написаны для приложения Claude: «Rules/ в проекте», Artifact, Gmail-коннектор, расписание. В вебе их исполняет агент на Messages API:
-- **Системный промпт** = `SKILL.md` (+ нужные `references/` по запросу через инструмент `read_skill_file`).
-- **Инструменты агента** (наши): `read_rules` / `write_rules` (правила пользователя в БД), `tracker_*`, `make_letter_pdf`, `make_cv`, `list_new_vacancies`, `inbox_*` (входящая почта из БД). Серверные инструменты Anthropic: `web_search`, `web_fetch`.
-- **Адаптер платформы**: короткий общий блок промпта «в этой среде „проект/Rules“ = инструменты read_rules/write_rules; расписание делает worker; почта — inbox_*». Сами `SKILL.md` меняем минимально, чтобы комплект для приложения Claude продолжал работать.
-- Альтернатива — Skills API Anthropic (загрузка скиллов как есть, исполнение в контейнере с кодом). Проверить в этапе 2: если поддерживает нужные инструменты и дешевле в поддержке — использовать.
+- **Login**: email link (magic link). No passwords.
+- **Email**: one provider for outbound (login, digest) and inbound (a unique address per user for forwarding job alerts and employer replies) — Postmark or Mailgun; chosen in stage 1.
+- **User API key**: stored encrypted (encryption key in an environment variable), never written to logs.
+- **Models**: Haiku — bulk vacancy assessment and email parsing; Sonnet — documents, interviews, review. User rules are cached; Batch API at night (−50%).
+- **Files** (CVs, PDF letters): generated on the server, stored in Railway object storage.
+- **Tracker**: a table in the panel; export to Google Sheets via a service account (no user OAuth), stage 4.
 
-## Открытые вопросы (решаются в своих этапах)
-- Провайдер почты (этап 1).
-- Messages API + свои инструменты vs Skills API (этап 2).
-- Хранение файлов: Railway bucket vs Postgres (этап 3).
+## Skills on the web
+The skills are written for the Claude app: "Rules/ in the project", Artifact, Gmail connector, scheduling. On the web an agent on the Messages API executes them:
+- **System prompt** = `SKILL.md` (+ the needed `references/` on demand via a `read_skill_file` tool).
+- **Agent tools** (ours): `read_rules` / `write_rules` (user rules in the DB), `tracker_*`, `make_letter_pdf`, `make_cv`, `list_new_vacancies`, `inbox_*` (inbound email from the DB). Anthropic server tools: `web_search`, `web_fetch`.
+- **Platform adapter**: a short shared prompt block: "in this environment 'project/Rules' = the read_rules/write_rules tools; scheduling is done by the worker; email = inbox_*". The `SKILL.md` files themselves change minimally so the Claude-app kit keeps working.
+- Alternative — Anthropic's Skills API (upload skills as is, run in a code container). To be checked in stage 2: if it supports the tools we need and is cheaper to maintain — use it.
+
+## Open questions (resolved in their stages)
+- Email provider (stage 1).
+- Messages API + own tools vs Skills API (stage 2).
+- File storage: Railway bucket vs Postgres (stage 3).

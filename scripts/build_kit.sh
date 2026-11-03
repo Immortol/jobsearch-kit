@@ -1,5 +1,5 @@
 #!/bin/bash
-# Собирает ZIP-архивы скиллов для версии «в приложении Claude»: dist/<skill>.zip и dist/Jobsearch-Kit.zip
+# Builds skill ZIPs for the Claude-app version: dist/<skill>.zip and dist/Jobsearch-Kit.zip
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 rm -rf "$ROOT/dist" && mkdir -p "$ROOT/dist/bundle/Jobsearch-Kit"

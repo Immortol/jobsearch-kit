@@ -1,20 +1,20 @@
-# 0003 · Сканер career-ops — шаг ночной цепочки внутри worker — 2026-11-02
+# 0003 · The career-ops scanner is a step of the nightly chain inside the worker — 2026-11-02
 
-**Контекст.** В черновике архитектуры сканер (Node: career-ops v1.32.0 + наш presieve) был отдельным сервисом Railway со своим cron, а `worker` (Python) — другим сервисом со своим cron. Оценка вакансий должна начинаться только после того, как сканер закончил, а связь «через расписание» хрупкая: сканер задержался или упал — worker молча оценивает вчерашнее. Владелец доверил выбор ассистенту.
+**Context.** In the draft architecture the scanner (Node: career-ops v1.32.0 + our presieve) was a separate Railway service with its own cron, and the `worker` (Python) another service with its own cron. Assessment must start only after the scanner has finished, and coupling them "by schedule" is fragile: if the scanner runs late or fails, the worker silently assesses yesterday's data. The owner left this choice to the assistant.
 
-**Решение.**
-- Отдельного сервиса `scanner` нет. Node и career-ops ставятся в образ `worker`.
-- Ночная цепочка — одна последовательная задача в `worker`: сканер (дочерний процесс Node) → предотсев → оценка (Batch) → пакеты → сводка.
-- Сканер пишет результат в файл/stdout, worker читает его и сохраняет в Postgres (в базу пишет только Python-код — одна схема, одно место миграций).
-- Каждый шаг логирует итог; сбой сканера не роняет цепочку — сводка честно сообщает «сканер не отработал», остальное (рассылки) обрабатывается.
+**Decision.**
+- No separate `scanner` service. Node and career-ops are installed in the `worker` image.
+- The nightly chain is one sequential job in the `worker`: scanner (Node child process) → presieve → assessment (Batch) → packages → digest.
+- The scanner writes its output to a file/stdout; the worker reads it and stores it in Postgres (only Python code writes to the DB — one schema, one place for migrations).
+- Each step logs its outcome; a scanner failure does not break the chain — the digest honestly reports "the scanner did not run", and everything else (job alerts) is still processed.
 
-**Почему.**
-- Порядок шагов гарантирован кодом, а не совпадением расписаний.
-- На один сервис меньше: дешевле на Railway, меньше мест для поломки.
-- Доступ к базе только у Python — не нужен второй клиент Postgres и дублирование схемы на Node.
+**Why.**
+- Step order is guaranteed by code, not by aligned schedules.
+- One service fewer: cheaper on Railway, fewer places to break.
+- Only Python touches the DB — no second Postgres client and no duplicated schema in Node.
 
-**Отвергли.**
-- Отдельный сервис `scanner` с собственным cron — хрупкая связь по времени, лишний сервис, запись в базу из двух языков.
-- Переписать сканер на Python — теряем совместимость с career-ops и с комплектом для приложения Claude.
+**Rejected.**
+- A separate `scanner` service with its own cron — fragile time-based coupling, an extra service, DB writes from two languages.
+- Rewriting the scanner in Python — loses compatibility with career-ops and with the Claude-app kit.
 
-**Когда реализуется.** Этап 5.
+**When implemented.** Stage 5.

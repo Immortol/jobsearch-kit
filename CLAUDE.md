@@ -1,35 +1,35 @@
-# Jobsearch Kit — инструкции для Claude
+# Jobsearch Kit — instructions for Claude
 
-Веб-панель для поиска работы на базе Claude API. Пользователи — 2–5 друзей владельца, каждый со своим API-ключом Anthropic (BYOK). Владелец и продакт — Александр; он не пишет код сам, проверяет результат по чек-листам.
+A job-search web panel built on the Claude API. Users are 2–5 friends of the owner, each with their own Anthropic API key (BYOK). Owner and product lead is Alexander; he does not write code and reviews results against checklists.
 
-## Как работаем
-- **Общение — по-русски**, коротко. Код, имена файлов, коммиты — по-английски.
-- **Архитектура и подходы — до кода.** Если у задачи больше одного разумного пути: варианты с плюсами/минусами, рекомендация, ждать «гоу». Непонятно — спросить, не гадать.
-- **Один этап — одна ветка — один чат.** Этапы и их статус — в `docs/PLAN.md`. Начиная работу: прочитай `docs/PLAN.md` и `docs/ARCHITECTURE.md`, возьми первый этап со статусом «далее», создай ветку `stage-N-<slug>`.
-- **Решения записывай в `docs/decisions/NNNN-<slug>.md`** (контекст → решение → почему → что отвергли). Не переобсуждай записанное без новой причины.
-- **Конец этапа:** тесты зелёные → PR в `main` с чек-листом «что проверить» простыми словами (без кода) → обнови статус в `docs/PLAN.md`. Сливает Александр.
-- Не раздувай этап: найденное вне этапа — строкой в «Бэклог» в `docs/PLAN.md`.
+## How we work
+- **Talk to Alexander in Russian**, briefly. Everything in the repository and on GitHub is in **English**: code, comments, file names, commits, PRs, docs. Exceptions: the skills in `skills/` (Russian product content, shipped to the Claude-app kit as is) and UI translation catalogs (`app/locales/<lang>/`). Docs meant for end users are kept in two versions: `<name>.md` (English) and `<name>.ru.md`. Instructions for Alexander himself go to the Claude project, not to GitHub.
+- **Architecture and approach before code.** If a task has more than one reasonable path: options with pros/cons, a recommendation, then wait for Alexander's "go". If unclear — ask, don't guess.
+- **One stage — one branch — one chat.** Stages and their status live in `docs/PLAN.md`. When starting: read `docs/PLAN.md` and `docs/ARCHITECTURE.md`, take the first stage with status `next`, create branch `stage-N-<slug>`.
+- **Record decisions in `docs/decisions/NNNN-<slug>.md`** (context → decision → why → rejected). Don't reopen a recorded decision without a new reason.
+- **End of stage:** tests green → PR into `main` with a plain-language "what to check" checklist (no code) → update status in `docs/PLAN.md`. Alexander merges.
+- Don't bloat a stage: anything found outside its scope goes as one line to "Backlog" in `docs/PLAN.md`.
 
-## Чего нельзя
-- Секреты (API-ключи, токены) — никогда в репозиторий. Только переменные окружения Railway.
-- Railway-проект `laudable-celebration` (бот Visited) — не трогать. У этого приложения свой проект.
-- Ничего не отправлять от имени пользователя (письма, отклики) — только черновики. Это продуктовый принцип, см. скиллы.
-- Деплой в production (`accept-deploy`, слияние в `main`) — только после явного «да» Александра.
+## Never
+- Secrets (API keys, tokens) never go into the repository. Railway environment variables only.
+- Railway project `laudable-celebration` (the Visited bot) — do not touch. This app has its own project.
+- Never send anything on the user's behalf (emails, applications) — drafts only. This is a product principle, see the skills.
+- Production deploy (`accept-deploy`, merging into `main`) only after Alexander's explicit "yes".
 
-## Карта репозитория
+## Repository map
 ```
-skills/        единый источник «мозга»: 7 скиллов (SKILL.md + references/assets/scripts).
-               Из них же собираются ZIP для версии «в приложении Claude» (scripts/build_kit.sh).
-docs/PLAN.md   цель, этапы, критерии приёмки, бэклог
-docs/ARCHITECTURE.md   стек и устройство (утверждены в этапе 0, решения 0002–0003)
-docs/decisions/        принятые решения
-docs/KIT_README.md     описание комплекта скиллов
-app/           (появится в этапе 1) серверная часть
+skills/        single source of the "brain": 7 skills (SKILL.md + references/assets/scripts).
+               The ZIPs for the Claude-app version are built from them (scripts/build_kit.sh).
+docs/PLAN.md   goal, stages, acceptance criteria, backlog
+docs/ARCHITECTURE.md   stack and layout (approved in stage 0, decisions 0002–0003)
+docs/decisions/        accepted decisions
+docs/KIT_README.md     description of the skills kit
+app/           server application (from stage 1)
 ```
 
-## Скиллы
-Правки в `skills/` меняют обе версии продукта (веб и комплект для приложения Claude). Меняя скилл, держи его рабочим в обеих: ссылки на инструменты платформы — через раздел «Где хранить» / адаптер (см. `docs/ARCHITECTURE.md`, «Скиллы в вебе»). После правки — `scripts/build_kit.sh`.
+## Skills
+Edits in `skills/` change both product versions (web and the Claude-app kit). When changing a skill, keep it working in both: references to platform tools go through the "where to store" section / adapter (see `docs/ARCHITECTURE.md`, "Skills on the web"). After editing, run `scripts/build_kit.sh`.
 
-## Команды
-(заполняются по мере появления: запуск, тесты, миграции)
-- `scripts/build_kit.sh` — собрать `dist/*.zip` скиллов для приложения Claude.
+## Commands
+(filled in as they appear: run, tests, migrations)
+- `scripts/build_kit.sh` — build `dist/*.zip` skills for the Claude app.
