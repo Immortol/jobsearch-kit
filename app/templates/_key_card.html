@@ -1,0 +1,29 @@
+<section class="card" id="key-card">
+  {% if status == "saved" %}<p class="note ok">{{ _("Key checked and saved.") }}</p>
+  {% elif status == "deleted" %}<p class="note ok">{{ _("Key deleted.") }}</p>
+  {% elif status == "bad_format" %}<p class="note err">{{ _("This does not look like an Anthropic API key. It should start with sk-ant-.") }}</p>
+  {% elif status == "invalid" %}<p class="note err">{{ _("Anthropic rejected this key. Check that you copied it fully and that it is active.") }}</p>
+  {% elif status == "unavailable" %}<p class="note err">{{ _("Could not reach Anthropic to check the key. Please try again in a minute.") }}</p>
+  {% endif %}
+
+  {% if user.api_key %}
+  <p><span class="dot ok"></span>{{ _("Connected, ends with …{last4}", last4=user.api_key.last4) }}</p>
+  {% else %}
+  <p><span class="dot warn"></span>{{ _("Not connected yet") }}</p>
+  {% endif %}
+
+  <form method="post" action="/settings/key" hx-post="/settings/key" hx-target="#key-card"
+        hx-swap="outerHTML" hx-disabled-elt="find button">
+    <label for="api_key">{% if user.api_key %}{{ _("Replace key") }}{% else %}{{ _("Your Anthropic API key") }}{% endif %}</label>
+    <input id="api_key" name="api_key" type="password" autocomplete="off" spellcheck="false"
+           placeholder="sk-ant-..." required>
+    <button type="submit">{{ _("Check and save") }}</button>
+  </form>
+
+  {% if user.api_key %}
+  <form method="post" action="/settings/key/delete" hx-post="/settings/key/delete"
+        hx-target="#key-card" hx-swap="outerHTML">
+    <button class="link danger" type="submit">{{ _("Delete key") }}</button>
+  </form>
+  {% endif %}
+</section>

@@ -24,7 +24,9 @@ docs/PLAN.md   goal, stages, acceptance criteria, backlog
 docs/ARCHITECTURE.md   stack and layout (approved in stage 0, decisions 0002–0003)
 docs/decisions/        accepted decisions
 docs/KIT_README.md     description of the skills kit
-app/           server application (from stage 1)
+app/           server application: FastAPI routes (routes/), templates/, static/, locales/
+migrations/    Alembic database migrations
+tests/         pytest suite (needs Postgres)
 ```
 
 ## Skills
@@ -33,3 +35,9 @@ Edits in `skills/` change both product versions (web and the Claude-app kit). Wh
 ## Commands
 (filled in as they appear: run, tests, migrations)
 - `scripts/build_kit.sh` — build `dist/*.zip` skills for the Claude app.
+- Local setup: Postgres 16 with databases `jsk_dev` and `jsk_test` (user/password `jsk`), `pip install -r requirements-dev.txt`, copy `.env.example` to `.env`.
+- `python -m pytest` — tests (use `jsk_test`, never `jsk_dev`). CI runs the same on every PR.
+- `alembic upgrade head` — apply migrations; `alembic revision --autogenerate -m "<what>"` — new migration after changing `app/models.py`.
+- `uvicorn app.main:app --reload` — run locally; in `APP_ENV=dev` sign-in links are printed to the console.
+- `python -m app.i18n_extract ru` — UI strings missing from `app/locales/ru.json`.
+- Production: Railway builds the `Dockerfile`, runs `alembic upgrade head` before each deploy (`railway.toml`), health check `/healthz`.

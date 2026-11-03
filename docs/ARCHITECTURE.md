@@ -34,9 +34,10 @@ Railway project "jobsearch-kit"
 ```
 Only Python code writes to the database; the scanner hands its output to the worker.
 
-- **Login**: email link (magic link). No passwords.
-- **Email**: one provider for outbound (login, digest) and inbound (a unique address per user for forwarding job alerts and employer replies) — Postmark or Mailgun; chosen in stage 1.
-- **User API key**: stored encrypted (encryption key in an environment variable), never written to logs.
+- **Login**: email link (magic link), invite-only. No passwords (decision 0005).
+- **Email**: Resend on `mail.almoti.com` for outbound (login, digest) and inbound (a unique address per user for forwarding job alerts and employer replies) (decision 0004).
+- **User API key**: stored encrypted (encryption key in an environment variable), never written to logs (decision 0005).
+- **UI language**: English in code, translations in `app/locales/` (decision 0006).
 - **Models**: Haiku — bulk vacancy assessment and email parsing; Sonnet — documents, interviews, review. User rules are cached; Batch API at night (−50%).
 - **Files** (CVs, PDF letters): generated on the server, stored in Railway object storage.
 - **Tracker**: a table in the panel; export to Google Sheets via a service account (no user OAuth), stage 4.
@@ -49,6 +50,5 @@ The skills are written for the Claude app: "Rules/ in the project", Artifact, Gm
 - Alternative — Anthropic's Skills API (upload skills as is, run in a code container). To be checked in stage 2: if it supports the tools we need and is cheaper to maintain — use it.
 
 ## Open questions (resolved in their stages)
-- Email provider (stage 1).
 - Messages API + own tools vs Skills API (stage 2).
 - File storage: Railway bucket vs Postgres (stage 3).

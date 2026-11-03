@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card narrow">
+  <h1>{{ _("Check your email") }}</h1>
+  <p>{{ _("If {email} is on the invitation list, a sign-in link is on its way. It is valid for 15 minutes.", email=email) }}</p>
+  <p class="muted">{{ _("Nothing arrived? Check the spam folder or ask the person who invited you.") }}</p>
+  <p><a href="/login">{{ _("Use another address") }}</a></p>
+</section>
+{% endblock %}

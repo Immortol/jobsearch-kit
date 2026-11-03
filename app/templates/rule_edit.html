@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="/rules">← {{ _("All rules") }}</a></p>
+<h1>{{ file.name }}</h1>
+<form method="post" action="/rules/{{ file.name }}" hx-post="/rules/{{ file.name }}"
+      hx-target="#save-status" hx-swap="innerHTML" class="card">
+  <textarea name="content" rows="24" spellcheck="true">{{ file.content }}</textarea>
+  <div class="row">
+    <button type="submit">{{ _("Save") }}</button>
+    <span id="save-status" class="muted" aria-live="polite"></span>
+  </div>
+</form>
+<form method="post" action="/rules/{{ file.name }}/delete"
+      hx-confirm="{{ _('Delete {name}?', name=file.name) }}" hx-post="/rules/{{ file.name }}/delete">
+  <button class="link danger" type="submit">{{ _("Delete file") }}</button>
+</form>
+{% endblock %}

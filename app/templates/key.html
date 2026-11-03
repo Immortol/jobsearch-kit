@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ _("API key") }}</h1>
+{% include "_key_card.html" %}
+<section class="card">
+  <h2>{{ _("Where to get a key") }}</h2>
+  <ol>
+    <li>{{ _("Open console.anthropic.com and sign in.") }}</li>
+    <li>{{ _("Settings → API Keys → Create Key.") }}</li>
+    <li>{{ _("Copy the key (it starts with sk-ant-) and paste it here.") }}</li>
+  </ol>
+  <p class="muted">{{ _("All requests to Claude use your key, and you see the spend in your Anthropic console. We store the key encrypted and never show it in full.") }}</p>
+</section>
+{% endblock %}

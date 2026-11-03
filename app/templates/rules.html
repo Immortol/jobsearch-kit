@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ _("Rules") }}</h1>
+<p class="muted">{{ _("Your personal rules: facts about you, how to write your documents, what to look for. The assistant reads them before every task. They will be filled in automatically during setup; for now you can edit them by hand.") }}</p>
+
+<section class="card">
+  {% if files %}
+  <ul class="files">
+    {% for f in files %}
+    <li><a href="/rules/{{ f.name }}">{{ f.name }}</a>
+      <span class="muted">{{ f.updated_at.strftime("%Y-%m-%d %H:%M") }} UTC</span></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">{{ _("No rules yet.") }}</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>{{ _("New file") }}</h2>
+  {% if error == "bad_name" %}
+  <p class="note err">{{ _("Use Latin letters, digits, _ and -, ending with .md, for example 01_Facts.md.") }}</p>
+  {% endif %}
+  <form method="post" action="/rules">
+    <label for="name">{{ _("File name") }}</label>
+    <input id="name" name="name" list="rule-names" required value="{{ name or '' }}" placeholder="01_Facts.md">
+    <datalist id="rule-names">
+      {% for s in suggestions %}<option value="{{ s }}">{% endfor %}
+    </datalist>
+    <button type="submit">{{ _("Create") }}</button>
+  </form>
+</section>
+{% endblock %}

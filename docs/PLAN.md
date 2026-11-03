@@ -26,4 +26,5 @@ Statuses: `done` · `in progress` · `next` · `later`.
 - In-app payments (option B) — once there are 10–20 happy users.
 - Gmail OAuth (requires Google verification) — only if forwarding turns out insufficient.
 - Confirmation of the IL/RU market packages after pilots.
+- Custom domain for the panel (e.g. `app.almoti.com`) instead of `*.up.railway.app`.
 - `build_kit.sh`: version number in the bundle archive name and its inner folder (`Jobsearch-Kit-v1.1/`, as in the v1.1 release); currently `Jobsearch-Kit/`.

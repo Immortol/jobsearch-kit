@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ _("Invitations") }}</h1>
+<p class="muted">{{ _("Only invited addresses can sign in. Adding an address sends that person an email with the panel address.") }}</p>
+{% include "_invites.html" %}
+{% endblock %}

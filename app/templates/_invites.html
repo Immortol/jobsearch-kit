@@ -1,0 +1,43 @@
+<div id="invites">
+  {% if status == "added" %}<p class="note ok">{{ _("{email} is invited; the invitation email has been sent.", email=target) }}</p>
+  {% elif status == "added_no_email" %}<p class="note warn">{{ _("{email} is invited, but the email could not be sent. Tell them the panel address yourself.", email=target) }}</p>
+  {% elif status == "exists" %}<p class="note">{{ _("{email} already has access.", email=target) }}</p>
+  {% elif status == "revoked" %}<p class="note ok">{{ _("Access for {email} has been removed together with their data.", email=target) }}</p>
+  {% elif status == "bad_email" %}<p class="note err">{{ _("This does not look like an email address.") }}</p>
+  {% endif %}
+
+  <section class="card">
+    <form method="post" action="/admin/invites" hx-post="/admin/invites" hx-target="#invites"
+          hx-swap="outerHTML" hx-disabled-elt="find button">
+      <label for="invite-email">{{ _("Email of the person to invite") }}</label>
+      <input id="invite-email" name="email" type="email" required>
+      <button type="submit">{{ _("Invite") }}</button>
+    </form>
+  </section>
+
+  <section class="card">
+    {% if invites %}
+    <table>
+      <thead><tr><th>{{ _("Email") }}</th><th>{{ _("Status") }}</th><th></th></tr></thead>
+      <tbody>
+      {% for inv in invites %}
+      <tr>
+        <td>{{ inv.email }}</td>
+        <td>{% if inv.email in joined %}{{ _("Signed in") }}{% else %}<span class="muted">{{ _("Not signed in yet") }}</span>{% endif %}</td>
+        <td>
+          <form method="post" action="/admin/invites/revoke" hx-post="/admin/invites/revoke"
+                hx-target="#invites" hx-swap="outerHTML"
+                hx-confirm="{{ _('Remove access for {email}? Their account and all data will be deleted.', email=inv.email) }}">
+            <input type="hidden" name="email" value="{{ inv.email }}">
+            <button class="link danger" type="submit">{{ _("Remove access") }}</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">{{ _("No invitations yet.") }}</p>
+    {% endif %}
+  </section>
+</div>
