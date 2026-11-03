@@ -40,4 +40,4 @@ Edits in `skills/` change both product versions (web and the Claude-app kit). Wh
 - `alembic upgrade head` — apply migrations; `alembic revision --autogenerate -m "<what>"` — new migration after changing `app/models.py`.
 - `uvicorn app.main:app --reload` — run locally; in `APP_ENV=dev` sign-in links are printed to the console.
 - `python -m app.i18n_extract ru` — UI strings missing from `app/locales/ru.json`.
-- Production: Railway builds the `Dockerfile`, runs `alembic upgrade head` before each deploy (`railway.toml`), health check `/healthz`.
+- Production: Railway project `jobsearch-kit`, service `web` builds the `Dockerfile`. Service settings live in Railway itself (Railway no longer reads `railway.toml`): pre-deploy `alembic upgrade head`, health check `/healthz` (60 s), restart on failure. Change them with the Railway tools, not with a config file.
