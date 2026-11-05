@@ -1,0 +1,1 @@
+{% if status == "saved" %}{{ _("Saved") }} · {{ file.updated_at.strftime("%H:%M:%S") }} UTC{% elif status == "too_large" %}<span class="err">{{ _("The file is too large.") }}</span>{% endif %}
