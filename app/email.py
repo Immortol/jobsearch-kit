@@ -81,16 +81,19 @@ def get_email_sender() -> EmailSender:
     return ResendSender(s.resend_api_key, s.email_from)
 
 
-def login_email(to: str, link: str) -> Email:
+def login_email(to: str, link: str, code: str) -> Email:
     s = get_settings()
+    # The code goes into the subject too: iPhone and Mac offer to fill it in from Mail.
     return Email(
         to=to,
-        subject=_("Your sign-in link for Jobsearch Kit"),
+        subject=_("Jobsearch Kit sign-in code: {code}", code=code),
         text=_(
-            "Hello!\n\nTo sign in to Jobsearch Kit, open this link:\n{link}\n\n"
-            "The link works once and is valid for {minutes} minutes.\n"
-            "If you did not ask for it, just ignore this email.",
-            link=link, minutes=s.login_token_ttl_minutes,
+            "Hello!\n\nYour sign-in code: {code}\n"
+            "Enter it on the page where you asked for it.\n\n"
+            "Or open this link:\n{link}\n\n"
+            "The code and the link work once and are valid for {minutes} minutes.\n"
+            "If you did not ask for them, just ignore this email.",
+            code=code, link=link, minutes=s.login_token_ttl_minutes,
         ),
     )
 

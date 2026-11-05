@@ -45,6 +45,9 @@ class LoginToken(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(320), index=True)
     token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    # 6-digit code from the same email, for signing in from another browser/device (0007).
+    code_hash: Mapped[str | None] = mapped_column(String(64))
+    code_attempts: Mapped[int] = mapped_column(default=0, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

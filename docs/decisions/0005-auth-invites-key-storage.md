@@ -4,7 +4,7 @@
 
 **Decision.**
 - **Invite-only.** Only addresses on the invite list (plus the owner, `OWNER_EMAIL` variable) can log in. The owner manages the list on the panel's "Invitations" page; adding an address sends an invitation email with the panel address. Revoking access deletes the account and all its data (with a confirmation).
-- **Email link login.** A random single-use token, stored only as a SHA-256 hash, valid 15 minutes, at most 5 links per address per hour. The link opens a page with a "Sign in" button (POST), so mail scanners that prefetch links cannot use it up. The login form gives the same answer whether or not the address is invited.
+- **Email link login** (plus a 6-digit code, decision 0007). A random single-use token, stored only as a SHA-256 hash, valid 15 minutes, at most 5 links per address per hour. The link opens a page with a "Sign in" button (POST), so mail scanners that prefetch links cannot use it up. The login form gives the same answer whether or not the address is invited.
 - **Sessions** are random IDs stored hashed in the database, in an `HttpOnly`, `Secure`, `SameSite=Lax` cookie for 30 days. POST requests from another origin are rejected.
 - **API key.** Checked with a free `GET /v1/models` request before saving. Encrypted in the app with Fernet (`cryptography`); the encryption key(s) live only in `APP_ENCRYPTION_KEY` (comma-separated for rotation). The panel shows only the last 4 characters. Request logs contain method and path only, never bodies or query strings.
 - **Rules** are stored as documents with the same file names as `Rules/` in the skills (`01_Facts.md`, `Market_DE.md`, …), so stage 2's `read_rules`/`write_rules` map onto the skills one to one.

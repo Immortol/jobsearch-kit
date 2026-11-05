@@ -60,6 +60,7 @@ input[type=email], input[type=password], input[type=text], input:not([type]), te
   width: 100%; padding: 10px 12px; font: inherit; color: var(--ink);
   background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
 }
+input.code { font-size: 1.5rem; letter-spacing: .3em; text-align: center; font-variant-numeric: tabular-nums; }
 textarea { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 14px; resize: vertical; }
 input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 button, .button {

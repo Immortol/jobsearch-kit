@@ -34,7 +34,7 @@ Railway project "jobsearch-kit"
 ```
 Only Python code writes to the database; the scanner hands its output to the worker.
 
-- **Login**: email link (magic link), invite-only. No passwords (decision 0005).
+- **Login**: email link or 6-digit code from the same email, invite-only. No passwords (decisions 0005, 0007).
 - **Email**: Resend on `mail.almoti.com` for outbound (login, digest) and inbound (a unique address per user for forwarding job alerts and employer replies) (decision 0004).
 - **User API key**: stored encrypted (encryption key in an environment variable), never written to logs (decision 0005).
 - **UI language**: English in code, translations in `app/locales/` (decision 0006).

@@ -44,10 +44,10 @@ def login_submit(
     # Same answer whether or not the address is invited, so the form reveals nothing.
     if auth.is_allowed(db, email) and \
             auth.recent_link_count(db, email) < get_settings().login_links_per_hour:
-        token = auth.create_login_token(db, email)
+        token, code = auth.create_login_token(db, email)
         link = f"{get_settings().app_base_url}/auth?token={token}"
         try:
-            sender.send(login_email(email, link))
+            sender.send(login_email(email, link, code))
         except EmailError:
             log.exception("login email failed")
             db.rollback()
@@ -70,6 +70,23 @@ def auth_submit(request: Request, token: str = Form(""), db: Session = Depends(g
     if user is None:
         db.commit()  # keep the token marked as used even when access was revoked meanwhile
         return render(request, "link_invalid.html", status_code=400)
+    return _start_session(db, user)
+
+
+@router.post("/auth/code")
+def auth_code(request: Request, email: str = Form(""), code: str = Form(""),
+              db: Session = Depends(get_db)):
+    # Same flow as the link, but typed in the browser where the person asked for it — the link
+    # may open in another browser (e.g. an in-app browser on iPhone) with its own cookies.
+    email = normalize_email(email)
+    user = auth.consume_code(db, email, code)
+    if user is None:
+        return render(request, "check_email.html", email=email, error="bad_code",
+                      status_code=400)
+    return _start_session(db, user)
+
+
+def _start_session(db: Session, user: User) -> RedirectResponse:
     sid = auth.create_session(db, user)
     target = "/panel" if user.api_key else "/settings/key"
     resp = RedirectResponse(target, status_code=303)

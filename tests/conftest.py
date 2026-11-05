@@ -29,6 +29,14 @@ from app.main import app  # noqa: E402
 
 OWNER = "owner@example.com"
 TOKEN_RE = re.compile(r"/auth\?token=([A-Za-z0-9_\-]+)")
+CODE_RE = re.compile(r"\b(\d{6})\b")
+
+
+def last_code(outbox) -> str:
+    m = CODE_RE.search(outbox.outbox[-1].subject)
+    assert m, outbox.outbox[-1].subject
+    assert m.group(1) in outbox.outbox[-1].text
+    return m.group(1)
 
 
 @pytest.fixture(scope="session", autouse=True)

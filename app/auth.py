@@ -1,5 +1,6 @@
 """Login links, sessions and access rules (decision 0005)."""
 
+import secrets
 from datetime import UTC, datetime, timedelta
 
 from fastapi import Depends, Request
@@ -44,22 +45,40 @@ def recent_link_count(db: Session, email: str) -> int:
     ) or 0
 
 
-def create_login_token(db: Session, email: str) -> str:
+MAX_CODE_ATTEMPTS = 5
+
+
+def _code_hash(token_hash: str, code: str) -> str:
+    # Salted with the token's own hash, so equal codes in different emails hash differently.
+    return hash_token(f"{token_hash}:{code}")
+
+
+def normalize_code(code: str) -> str:
+    return "".join(ch for ch in code if ch.isdigit())
+
+
+def create_login_token(db: Session, email: str) -> tuple[str, str]:
+    """Returns (link token, 6-digit code). Both sign in once; using either uses up both."""
     token = new_token()
+    code = f"{secrets.randbelow(10**6):06d}"
+    token_hash = hash_token(token)
     db.add(LoginToken(
         email=email,
-        token_hash=hash_token(token),
+        token_hash=token_hash,
+        code_hash=_code_hash(token_hash, code),
         expires_at=now() + timedelta(minutes=get_settings().login_token_ttl_minutes),
     ))
     db.flush()
-    return token
+    return token, code
+
+
+def _is_valid(row: LoginToken | None) -> bool:
+    return row is not None and row.used_at is None and row.expires_at > now()
 
 
 def find_valid_token(db: Session, token: str) -> LoginToken | None:
     row = db.scalar(select(LoginToken).where(LoginToken.token_hash == hash_token(token)))
-    if row is None or row.used_at is not None or row.expires_at <= now():
-        return None
-    return row
+    return row if _is_valid(row) else None
 
 
 def consume_token(db: Session, token: str) -> User | None:
@@ -67,6 +86,30 @@ def consume_token(db: Session, token: str) -> User | None:
     row = find_valid_token(db, token)
     if row is None:
         return None
+    return _consume(db, row)
+
+
+def consume_code(db: Session, email: str, code: str) -> User | None:
+    """Signs in with the code from the email. Every wrong code counts against all of the
+    address's open links; after MAX_CODE_ATTEMPTS wrong codes they stop working."""
+    email = normalize_email(email)
+    code = normalize_code(code)
+    rows = [r for r in db.scalars(
+        select(LoginToken).where(LoginToken.email == email, LoginToken.used_at.is_(None))
+    ) if _is_valid(r) and r.code_hash]
+    if len(code) == 6:
+        for row in rows:
+            if secrets.compare_digest(row.code_hash, _code_hash(row.token_hash, code)):
+                return _consume(db, row)
+    for row in rows:
+        row.code_attempts += 1
+        if row.code_attempts >= MAX_CODE_ATTEMPTS:
+            row.used_at = now()
+    db.flush()
+    return None
+
+
+def _consume(db: Session, row: LoginToken) -> User | None:
     row.used_at = now()
     if not is_allowed(db, row.email):
         return None
