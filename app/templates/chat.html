@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{{ chat.title or _("Chat") }} · Jobsearch Kit{% endblock %}
+{% block content %}
+<p><a href="/chats">← {{ _("All chats") }}</a></p>
+<h1 class="chat-title">{{ chat.title or _("Chat") }}</h1>
+
+<div id="thread" class="thread" aria-live="polite">
+  {% for v in messages %}{% include "_message.html" %}{% endfor %}
+</div>
+
+<div id="composer-note"></div>
+{% if user.api_key %}
+<form method="post" action="/chats/{{ chat.id }}/messages" hx-post="/chats/{{ chat.id }}/messages"
+      hx-target="#thread" hx-swap="beforeend" class="composer card" data-composer>
+  <label class="sr-only" for="message">{{ _("Message") }}</label>
+  <textarea id="message" name="message" rows="3" required
+            placeholder="{{ _('Write a message…') }}"></textarea>
+  <button type="submit"{% if running %} disabled{% endif %}>{{ _("Send") }}</button>
+</form>
+{% else %}
+{% include "_no_key.html" %}
+{% endif %}
+
+<form method="post" action="/chats/{{ chat.id }}/delete" class="chat-delete"
+      hx-confirm="{{ _('Delete this chat? The money already spent stays in the counter.') }}"
+      hx-post="/chats/{{ chat.id }}/delete">
+  <button class="link danger" type="submit">{{ _("Delete chat") }}</button>
+</form>
+{% endblock %}

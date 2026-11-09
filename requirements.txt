@@ -8,3 +8,5 @@ cryptography==50.0.2
 httpx==0.28.1
 python-multipart==0.0.33
 pydantic-settings==2.16.2
+anthropic==2.6.0
+markdown-it-py==4.2.0

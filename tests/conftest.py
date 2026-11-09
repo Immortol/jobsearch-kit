@@ -52,7 +52,8 @@ def clean_tables():
     yield
     with get_engine().begin() as conn:
         conn.execute(text(
-            "TRUNCATE invites, login_tokens, users, sessions, api_keys, rule_files "
+            "TRUNCATE invites, login_tokens, users, sessions, api_keys, rule_files, chats, "
+            "chat_messages, usage_records "
             "RESTART IDENTITY CASCADE"
         ))
 
@@ -113,3 +114,64 @@ def invite(client: TestClient, outbox: MemorySender, email: str):
     r = client.post("/admin/invites", data={"email": email})
     assert r.status_code == 200
     client.post("/logout")
+
+
+# --- Claude API fakes (stage 2) ----------------------------------------------------------------
+
+class FakeClaude:
+    """Scripted Messages API: returns the queued responses in order and records every request."""
+
+    def __init__(self, *responses):
+        self.responses = list(responses)
+        self.requests: list[dict] = []
+        self.keys: list[str] = []
+
+    def queue(self, *responses):
+        self.responses.extend(responses)
+
+    def create(self, api_key, params, on_event):
+        import copy
+        self.keys.append(api_key)
+        self.requests.append(copy.deepcopy(params))
+        if not self.responses:
+            raise AssertionError("FakeClaude: no response queued")
+        r = self.responses.pop(0)
+        if isinstance(r, Exception):
+            raise r
+        for block in r["content"]:
+            if block["type"] in ("tool_use", "server_tool_use"):
+                on_event("tool", block["name"])
+            elif block["type"] == "text":
+                on_event("text", block["text"])
+        return {"model": "claude-sonnet-5-5", **r}
+
+
+def reply(text, usage=None, stop="end_turn"):
+    return {"content": [{"type": "text", "text": text}], "stop_reason": stop,
+            "usage": usage or {"input_tokens": 1000, "output_tokens": 100}}
+
+
+def tool_call(*calls, usage=None):
+    """calls: (id, name, input) tuples."""
+    return {"content": [{"type": "tool_use", "id": i, "name": n, "input": a} for i, n, a in calls],
+            "stop_reason": "tool_use",
+            "usage": usage or {"input_tokens": 1000, "output_tokens": 50}}
+
+
+class InlineRunner:
+    def submit(self, fn):
+        fn()
+
+
+class HeldRunner:
+    """Keeps jobs until `run_all()`, to look at a reply while it is still running."""
+
+    def __init__(self):
+        self.jobs = []
+
+    def submit(self, fn):
+        self.jobs.append(fn)
+
+    def run_all(self):
+        while self.jobs:
+            self.jobs.pop(0)()

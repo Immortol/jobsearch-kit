@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app import auth
 from app.auth import require_user
+from app.chat import spend
 from app.db import get_db
 from app.models import User, utcnow
 from app.rules import list_rules
@@ -23,6 +24,7 @@ def account(request: Request, user: User = Depends(require_user)):
 
 def export_data(db: Session, user: User) -> dict:
     key = user.api_key
+    spent = spend(db, user)
     return {
         "exported_at": utcnow().isoformat(),
         "email": user.email,
@@ -31,6 +33,13 @@ def export_data(db: Session, user: User) -> dict:
             "last4": key.last4, "verified_at": key.verified_at.isoformat(),
             "note": "The key itself is not exported.",
         },
+        "spend_usd": {"this_month": str(spent.month), "total": str(spent.total)},
+        "chats": [
+            {"title": c.title, "created_at": c.created_at.isoformat(), "messages": [
+                {"role": m.role, "text": m.text, "created_at": m.created_at.isoformat(),
+                 "cost_usd": str(m.cost_usd)} for m in c.messages
+            ]} for c in user.chats
+        ],
         "rules": [
             {"name": r.name, "content": r.content, "updated_at": r.updated_at.isoformat()}
             for r in list_rules(db, user)

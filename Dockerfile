@@ -11,6 +11,8 @@ RUN pip install -r requirements.txt
 COPY alembic.ini .
 COPY migrations ./migrations
 COPY app ./app
+# The agent reads the skills at run time (decision 0009).
+COPY skills ./skills
 
 RUN useradd --create-home appuser
 USER appuser

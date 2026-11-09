@@ -2,7 +2,11 @@
 
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, ForeignKey, LargeBinary, String, Text, UniqueConstraint
+from decimal import Decimal
+
+from sqlalchemy import (
+    JSON, DateTime, ForeignKey, Index, LargeBinary, Numeric, String, Text, UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -34,6 +38,10 @@ class User(Base):
     rule_files: Mapped[list["RuleFile"]] = relationship(
         back_populates="user", cascade="all, delete-orphan", passive_deletes=True,
         order_by="RuleFile.name",
+    )
+    chats: Mapped[list["Chat"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan", passive_deletes=True,
+        order_by="Chat.updated_at.desc()",
     )
 
 
@@ -93,3 +101,62 @@ class RuleFile(Base):
     )
 
     user: Mapped[User] = relationship(back_populates="rule_files")
+
+
+class Chat(Base):
+    """A conversation with the assistant (decision 0009)."""
+
+    __tablename__ = "chats"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    title: Mapped[str] = mapped_column(String(200), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    user: Mapped[User] = relationship(back_populates="chats")
+    messages: Mapped[list["ChatMessage"]] = relationship(
+        back_populates="chat", cascade="all, delete-orphan", passive_deletes=True,
+        order_by="ChatMessage.id",
+    )
+
+
+class ChatMessage(Base):
+    """One message in a chat.
+
+    `text` is what the panel shows. `api_messages` is what was exchanged with the Claude API for
+    this message, in API format: for a user message, the user turn; for an assistant reply, every
+    assistant turn and tool result of that reply. Concatenated in order, they are the history
+    sent with the next request.
+    """
+
+    __tablename__ = "chat_messages"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    chat_id: Mapped[int] = mapped_column(ForeignKey("chats.id", ondelete="CASCADE"), index=True)
+    role: Mapped[str] = mapped_column(String(16))  # "user" or "assistant"
+    text: Mapped[str] = mapped_column(Text, default="")
+    api_messages: Mapped[list] = mapped_column(JSON, default=list)
+    status: Mapped[str] = mapped_column(String(16), default="done")  # running, done, error
+    error: Mapped[str | None] = mapped_column(String(32))
+    cost_usd: Mapped[Decimal] = mapped_column(Numeric(12, 6), default=Decimal(0))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    chat: Mapped[Chat] = relationship(back_populates="messages")
+
+
+class UsageRecord(Base):
+    """Cost of one Claude API call made with the user's key. Kept when a chat is deleted, so the
+    spend shown in the panel never goes down; removed only with the account."""
+
+    __tablename__ = "usage_records"
+    __table_args__ = (Index("ix_usage_records_user_created", "user_id", "created_at"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    model: Mapped[str] = mapped_column(String(64))
+    purpose: Mapped[str] = mapped_column(String(32), default="chat")
+    usage: Mapped[dict] = mapped_column(JSON, default=dict)
+    cost_usd: Mapped[Decimal] = mapped_column(Numeric(12, 6))

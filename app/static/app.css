@@ -92,3 +92,35 @@ th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line
 td button.link, td button.link.danger { margin: 0; }
 th { font-size: .85rem; color: var(--muted); font-weight: 600; }
 .danger-zone { border-color: color-mix(in srgb, var(--err) 35%, var(--line)); }
+
+/* Spend counter (decision 0009) */
+.spend { flex-basis: 100%; font-size: .85rem; color: var(--muted); text-decoration: none; }
+.spend:hover { color: var(--accent); }
+
+/* Chat */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.chat-title { font-size: 1.2rem; overflow-wrap: anywhere; }
+.thread { display: flex; flex-direction: column; gap: 12px; margin: 16px 0; }
+.msg { padding: 12px 14px; border-radius: var(--radius); overflow-wrap: anywhere; }
+.msg.user {
+  align-self: flex-end; max-width: 88%; white-space: pre-wrap;
+  background: var(--accent); color: var(--accent-ink);
+}
+.msg.assistant { background: var(--surface); border: 1px solid var(--line); }
+.msg .md > :first-child { margin-top: 0; }
+.msg .md > :last-child { margin-bottom: 0; }
+.msg .md table { border-collapse: collapse; display: block; overflow-x: auto; }
+.msg .md th, .msg .md td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; }
+.msg .md pre { overflow-x: auto; background: var(--bg); padding: 10px; border-radius: 8px; }
+.msg .progress, .msg .cost { font-size: .85rem; margin: 8px 0 0; }
+.msg .note { margin: 8px 0 0; }
+.cost { font-variant-numeric: tabular-nums; }
+.spinner {
+  display: inline-block; width: .8em; height: .8em; margin-right: 8px; vertical-align: -1px;
+  border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+.composer textarea { font-family: inherit; font-size: 16px; }
+.chat-delete { margin-top: 8px; }

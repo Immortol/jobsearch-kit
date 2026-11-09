@@ -40,4 +40,5 @@ Edits in `skills/` change both product versions (web and the Claude-app kit). Wh
 - `alembic upgrade head` — apply migrations; `alembic revision --autogenerate -m "<what>"` — new migration after changing `app/models.py`.
 - `uvicorn app.main:app --reload` — run locally; in `APP_ENV=dev` sign-in links are printed to the console.
 - `python -m app.i18n_extract ru` — UI strings missing from `app/locales/ru.json`.
-- Production: Railway project `jobsearch-kit`, service `web` builds the `Dockerfile`. Service settings live in Railway itself (Railway no longer reads `railway.toml`): pre-deploy `alembic upgrade head`, health check `/healthz` (60 s), restart on failure. Change them with the Railway tools, not with a config file.
+- Chat agent: `app/agent.py` (prompt, tools, loop), skills enabled in the panel — `ENABLED_SKILLS` in `app/skills.py`, model prices — `app/pricing.py` (update when Anthropic changes them). Tests never call the real API: they use `FakeClaude` from `tests/conftest.py`.
+- Production: Railway project `jobsearch-kit`, service `web` builds the `Dockerfile`. Service settings live in Railway itself (Railway no longer reads `railway.toml`): pre-deploy `alembic upgrade head`, health check `/healthz` (60 s), restart on failure, **one replica** (chat progress lives in memory, decision 0009). Change them with the Railway tools, not with a config file.
