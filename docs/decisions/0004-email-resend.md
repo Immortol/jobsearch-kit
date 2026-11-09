@@ -1,5 +1,7 @@
 # 0004 · Email: Resend on the `mail.almoti.com` subdomain — 2026-11-03
 
+> Inbound part superseded by 0008 (users connect their Gmail). Resend remains for outbound email.
+
 **Context.** Stage 1 needs outbound email (login links, invitations). Stage 5 will need inbound email: each user gets an address to forward job alerts and employer replies to. Any provider needs our own domain for DKIM/SPF, otherwise mail to iCloud/Gmail lands in spam. Alexander owns `almoti.com`.
 
 **Decision.**

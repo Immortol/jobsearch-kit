@@ -10,4 +10,4 @@
 - Development happens in this repository: one stage = one branch = one chat, decisions in `docs/decisions/`.
 - Skills are the single source for both the web app and the Claude-app kit.
 
-**Rejected.** Telegram bot as the main interface (less work, but not a panel); in-app payments (too early for 2–5 people); Gmail OAuth (Google verification, paid security audit).
+**Rejected.** Telegram bot as the main interface (less work, but not a panel); in-app payments (too early for 2–5 people); Gmail OAuth (Google verification, paid security audit) — *revised by 0008: not required below 100 users.*

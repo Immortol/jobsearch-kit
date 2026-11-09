@@ -26,7 +26,7 @@ The comparison the decision was based on:
 ## Layout
 ```
 Railway project "jobsearch-kit"
-├─ web        FastAPI: panel, chat (SSE), questionnaire, tracker, inbound email webhook
+├─ web        FastAPI: panel, chat (SSE), questionnaire, tracker, Gmail connection (OAuth)
 ├─ worker     same code + Node in the image, nightly cron — one sequential chain:
 │             scanner (career-ops v1.32.0 + presieve from skills/jobsearch-scanner/assets)
 │             → presieve → assessment (Batch) → packages → digest   (decision 0003)
@@ -35,7 +35,8 @@ Railway project "jobsearch-kit"
 Only Python code writes to the database; the scanner hands its output to the worker.
 
 - **Login**: email link or 6-digit code from the same email, invite-only. No passwords (decisions 0005, 0007).
-- **Email**: Resend on `mail.almoti.com` for outbound (login, digest) and inbound (a unique address per user for forwarding job alerts and employer replies) (decision 0004).
+- **Email we send**: Resend on `mail.almoti.com`, outbound only — sign-in codes, invitations, digest (decision 0004).
+- **User's Gmail**: connected via Google OAuth (read, drafts, labels — never send). Job alerts and employer replies are read from it; application drafts go into its Drafts (decision 0008).
 - **User API key**: stored encrypted (encryption key in an environment variable), never written to logs (decision 0005).
 - **UI language**: English in code, translations in `app/locales/` (decision 0006).
 - **Models**: Haiku — bulk vacancy assessment and email parsing; Sonnet — documents, interviews, review. User rules are cached; Batch API at night (−50%).
@@ -45,8 +46,8 @@ Only Python code writes to the database; the scanner hands its output to the wor
 ## Skills on the web
 The skills are written for the Claude app: "Rules/ in the project", Artifact, Gmail connector, scheduling. On the web an agent on the Messages API executes them:
 - **System prompt** = `SKILL.md` (+ the needed `references/` on demand via a `read_skill_file` tool).
-- **Agent tools** (ours): `read_rules` / `write_rules` (user rules in the DB), `tracker_*`, `make_letter_pdf`, `make_cv`, `list_new_vacancies`, `inbox_*` (inbound email from the DB). Anthropic server tools: `web_search`, `web_fetch`.
-- **Platform adapter**: a short shared prompt block: "in this environment 'project/Rules' = the read_rules/write_rules tools; scheduling is done by the worker; email = inbox_*". The `SKILL.md` files themselves change minimally so the Claude-app kit keeps working.
+- **Agent tools** (ours): `read_rules` / `write_rules` (user rules in the DB), `tracker_*`, `make_letter_pdf`, `make_cv`, `list_new_vacancies`, `gmail_*` (search/read the user's mail, create drafts, labels — via their OAuth token). Anthropic server tools: `web_search`, `web_fetch`.
+- **Platform adapter**: a short shared prompt block: "in this environment 'project/Rules' = the read_rules/write_rules tools; scheduling is done by the worker; email = gmail_*". The `SKILL.md` files themselves change minimally so the Claude-app kit keeps working.
 - Alternative — Anthropic's Skills API (upload skills as is, run in a code container). To be checked in stage 2: if it supports the tools we need and is cheaper to maintain — use it.
 
 ## Open questions (resolved in their stages)
