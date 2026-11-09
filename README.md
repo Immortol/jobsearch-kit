@@ -1,9 +1,9 @@
 # Jobsearch Kit
 
-Помощник по поиску работы на базе Claude: анкета, правдивое резюме, поиск и оценка вакансий, пакеты документов, подготовка к собеседованиям, обзор недели.
+A Claude-based job-search assistant: questionnaire, truthful CV, finding and assessing vacancies, application packages, interview preparation, weekly review.
 
-Две версии из одного источника (`skills/`):
-- **Комплект для приложения Claude** — 7 скиллов, ставятся вручную; работает по подписке Claude. Сборка: `scripts/build_kit.sh`. Описание: `docs/KIT_README.md`.
-- **Веб-панель** (в разработке) — на Claude API, ключ пользователя. План: `docs/PLAN.md`, архитектура: `docs/ARCHITECTURE.md`.
+Two versions from one source (`skills/`):
+- **Kit for the Claude app** — 7 skills, installed manually; runs on a Claude subscription. Build: `scripts/build_kit.sh`. Description: `docs/KIT_README.md`.
+- **Web panel** (in development) — runs on the Claude API with the user's own key. Plan: `docs/PLAN.md`, architecture: `docs/ARCHITECTURE.md`.
 
-Для Claude: начинай с `CLAUDE.md`.
+For Claude: start with `CLAUDE.md`.

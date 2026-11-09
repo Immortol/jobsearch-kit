@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card narrow">
+  <h1>{{ _("Sign in to Jobsearch Kit") }}</h1>
+  <form method="post" action="/auth">
+    <input type="hidden" name="token" value="{{ token }}">
+    <button type="submit">{{ _("Sign in") }}</button>
+  </form>
+</section>
+{% endblock %}

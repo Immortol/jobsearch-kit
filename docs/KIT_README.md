@@ -1,59 +1,59 @@
 # Jobsearch-Kit
 
-Система поиска работы на базе Claude: анкета → резюме → вакансии → пакеты документов → собеседования → развитие.
-Собрана на опыте реального поиска (Германия, PM, 2026) и обобщена для любой страны и профессии.
+A Claude-based job-search system: questionnaire → CV → vacancies → application packages → interviews → growth.
+Built from a real job search (Germany, PM, 2026) and generalised for any country and profession.
 
-> Для людей, которые будут пользоваться системой, есть отдельный гайд (Google Doc, RU и EN). Этот README — для того, кто комплект поддерживает.
-> Установка у пользователя: каждый скилл — отдельный ZIP (`dist/*.zip`), Customize → Skills → «+» → «Create skill» → «Upload a skill». Обновление: удалить старый скилл и загрузить новый ZIP.
+> People who will use the system have a separate guide (Google Doc, RU and EN). This README is for whoever maintains the kit.
+> Installation for a user: each skill is a separate ZIP (`dist/*.zip`), Customize → Skills → "+" → "Create skill" → "Upload a skill". Update: delete the old skill and upload the new ZIP.
 
-## Из чего состоит
+## What it consists of
 
-| Скилл | Что делает | Статус |
+| Skill | What it does | Status |
 |---|---|---|
-| `jobsearch-setup` | Знакомство и анкета → мастер-резюме → правила человека → трекер → чаты → расписание | v0.4 |
-| `jobsearch-vacancy` | Ссылка на вакансию → способ подачи → оценка → письмо/CV → пакет → трекер | v0.1 |
-| `jobsearch-digest` | Ночная сводка: почта, новые вакансии, пакеты, «Главное сегодня» | v0.1 |
-| `jobsearch-interview` | Карточка к собеседованию, пробное интервью, разбор после | v0.1 |
-| `jobsearch-review` | Обзор недели: воронка, охват, что менять | v0.1 |
-| `jobsearch-scanner` | Pro: сканер career-ops на Mac — установка одной командой, настройки из правил, ночной запуск | v0.1 |
-| `jobsearch-growth` | Самые дешёвые и неочевидные способы подтянуть то, что мешает найму | v0.1 |
+| `jobsearch-setup` | Introduction and questionnaire → master CV → personal rules → tracker → chats → schedule | v0.4 |
+| `jobsearch-vacancy` | Vacancy link → application method → assessment → letter/CV → package → tracker | v0.1 |
+| `jobsearch-digest` | Nightly digest: email, new vacancies, packages, "Today's priorities" | v0.1 |
+| `jobsearch-interview` | Interview card, mock interview, debrief afterwards | v0.1 |
+| `jobsearch-review` | Weekly review: funnel, reach, what to change | v0.1 |
+| `jobsearch-scanner` | Pro: career-ops scanner on a Mac — one-command install, settings from the rules, nightly run | v0.1 |
+| `jobsearch-growth` | The cheapest and least obvious ways to fix what is blocking hiring | v0.1 |
 
-Все скиллы одинаковые для всех людей. Различаются только **правила человека** — четыре файла, которые `jobsearch-setup` создаёт в его проекте:
+The skills are identical for everyone. Only the **person's rules** differ — the files `jobsearch-setup` creates in their project:
 
 ```
-Rules/  (имена файлов фиксированные, содержимое — на языке человека)
-  00_Setup_Status  — где мы в настройке, что вернуть позже
-  01_Facts         — факты о человеке и достижения, которые он готов защищать
-  02_Documents     — как писать резюме и письма для него
-  03_Strategy      — что искать, как оценивать, приоритеты (широко по умолчанию)
-  04_Processes     — кто что делает и когда (чаты, сводка, обзор)
-  Market_<код>     — рыночный пакет его страны/стран
-  CHANGELOG        — история изменений правил
+Rules/  (file names are fixed; content is in the person's language)
+  00_Setup_Status  — where we are in setup, what to come back to later
+  01_Facts         — facts about the person and achievements they are ready to defend
+  02_Documents     — how to write CVs and letters for them
+  03_Strategy      — what to look for, how to assess, priorities (broad by default)
+  04_Processes     — who does what and when (chats, digest, review)
+  Market_<code>    — market package for their country/countries
+  CHANGELOG        — history of rule changes
 ```
-## Уровни
+## Tiers
 
-- **Lite** — проект в Claude + скиллы + трекер в Google Таблицах. Вакансии по ссылкам и из рассылок порталов.
-- **Standard** — плюс ночная сводка, ярлыки и черновики в Gmail, обзор недели. Рекомендуемый старт.
-- **Pro** — плюс сканер вакансий на Mac (`jobsearch-scanner`: career-ops, одна команда в Терминал, ночной запуск).
+- **Lite** — a Claude project + skills + a tracker in Google Sheets. Vacancies from links and from portal job alerts.
+- **Standard** — plus a nightly digest, Gmail labels and drafts, weekly review. Recommended start.
+- **Pro** — plus a vacancy scanner on a Mac (`jobsearch-scanner`: career-ops, one command in Terminal, nightly run).
 
-## Принципы, общие для всех скиллов
+## Principles shared by all skills
 
-1. **Только правда.** В документы попадает только то, что человек сказал и готов защитить на собеседовании.
-2. **Ничего не отправлять от имени человека.** Только черновики.
-3. **Бережно.** Маленькие порции, без жаргона, «не знаю / пропустить / позже» — всегда нормальный ответ. Сначала польза, потом настройки.
-4. **Широко по умолчанию.** География и типы ролей сужаются только по явному слову человека, не по догадке модели.
-5. **Правила человека — в его проекте, а не в скиллах.** Скиллы общие, правила личные.
+1. **Truth only.** Documents contain only what the person said and is ready to defend in an interview.
+2. **Never send anything on the person's behalf.** Drafts only.
+3. **Gently.** Small portions, no jargon; "don't know / skip / later" is always a valid answer. Value first, settings later.
+4. **Broad by default.** Geography and role types are narrowed only by the person's explicit word, not by the model's guess.
+5. **The person's rules live in their project, not in the skills.** Skills are shared, rules are personal.
 
-## Рыночные пакеты
+## Market packages
 
-Лежат в `jobsearch-setup/references/markets/`. Новый пакет для страны/профессии `jobsearch-setup` собирает исследованием по `_template.md` и процедуре в `research.md`. Удачные пакеты после пилота добавляются в библиотеку, чтобы следующий человек из той же страны получил готовый.
+They live in `jobsearch-setup/references/markets/`. `jobsearch-setup` builds a new package for a country/profession by research, following `_template.md` and the procedure in `research.md`. Good packages are added to the library after a pilot, so the next person from the same country gets a ready one.
 
-## Версии
+## Versions
 
-- **v1.1 (28.10.2026) — уровень Pro:** `jobsearch-scanner` (career-ops v1.32.0, универсальный предотсев, launchd + пробуждение), сводка читает файл сканера, обзор следит за его здоровьем. hh.ru — через автопоиск на почту: публичный API закрыт с 04.2026.
-- **v1.0 (28.10.2026) — первая версия для пилота:** все 6 скиллов (`jobsearch-digest` и `jobsearch-review` v0.1), гайд RU/EN. Уровень Pro (сканер) — пока вручную с автором.
-- v0.5 (28.10.2026) — `jobsearch-vacancy` (с генератором письма в PDF, проверка «одна страница») и `jobsearch-interview`. С ними пилот можно запускать на уровне Lite.
-- v0.4 (28.10.2026) — рыночные пакеты IL, RU, REMOTE (из источников, ждут пилотов); ролевые вставки: разработчик, дизайнер, PM; скилл `jobsearch-growth` v0.1.
-- v0.3 (27.10.2026) — большая анкета по согласию, страницей (можно возвращаться, ответы сохраняются, с телефона), предзаполнение из CV, вопросы-проверки цифр под человека. Альтернатива — анкета в чате.
-- v0.2 (27.10.2026) — после первого сухого прогона: старт с простого выбора «начнём?», резюме человек присылает сам, ничего не искать на Диске/в памяти без спроса, в первой встрече один вопрос в сообщении, «как я тебя понял» — максимум 4 строки.
-- v0.1 (27.10.2026) — `jobsearch-setup`, пакет DE.
+- **v1.1 (2026-10-28) — Pro tier:** `jobsearch-scanner` (career-ops v1.32.0, universal presieve, launchd + wake-up); the digest reads the scanner file; the review monitors its health. hh.ru — via saved-search email alerts: the public API has been closed since 04.2026.
+- **v1.0 (2026-10-28) — first pilot version:** all 6 skills (`jobsearch-digest` and `jobsearch-review` v0.1), RU/EN guide. Pro tier (scanner) — manual, with the author, for now.
+- v0.5 (2026-10-28) — `jobsearch-vacancy` (with a PDF letter generator and a "one page" check) and `jobsearch-interview`. With them a Lite-tier pilot can start.
+- v0.4 (2026-10-28) — market packages IL, RU, REMOTE (from sources, awaiting pilots); role inserts: developer, designer, PM; skill `jobsearch-growth` v0.1.
+- v0.3 (2026-10-27) — large consent-based questionnaire as a page (can return, answers are saved, works on a phone), prefill from CV, number-check questions tailored to the person. Alternative — questionnaire in chat.
+- v0.2 (2026-10-27) — after the first dry run: start with a simple "shall we begin?", the person sends their CV themselves, never search Drive/memory without asking, one question per message in the first session, "how I understood you" — 4 lines max.
+- v0.1 (2026-10-27) — `jobsearch-setup`, DE package.

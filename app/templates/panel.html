@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ _("Panel") }}</h1>
+<p class="muted">{{ _("Signed in as {email}", email=user.email) }}</p>
+
+<div class="grid">
+  <section class="card">
+    <h2>{{ _("API key") }}</h2>
+    {% if user.api_key %}
+    <p><span class="dot ok"></span>{{ _("Connected, ends with …{last4}", last4=user.api_key.last4) }}</p>
+    {% else %}
+    <p><span class="dot warn"></span>{{ _("Not connected yet") }}</p>
+    <a class="button" href="/settings/key">{{ _("Add key") }}</a>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h2>{{ _("Rules") }}</h2>
+    <p>{{ _("Files: {count}", count=rules_count) }}</p>
+    <a href="/rules">{{ _("Open") }}</a>
+  </section>
+</div>
+
+<section class="card empty">
+  <h2>{{ _("Coming next") }}</h2>
+  <p class="muted">{{ _("Chat with the assistant, questionnaire, CV, vacancies and the tracker will appear here step by step.") }}</p>
+</section>
+{% endblock %}

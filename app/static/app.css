@@ -1,0 +1,94 @@
+:root {
+  --bg: #f6f5f2;
+  --surface: #ffffff;
+  --ink: #1d1d1b;
+  --muted: #6b6a65;
+  --line: #e3e1db;
+  --accent: #2f5d50;
+  --accent-ink: #ffffff;
+  --ok: #2f7d4f;
+  --warn: #b7791f;
+  --err: #b3261e;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161615;
+    --surface: #1f1f1d;
+    --ink: #ecebe6;
+    --muted: #a09e97;
+    --line: #33322f;
+    --accent: #7fb8a4;
+    --accent-ink: #10201b;
+    --ok: #6cc48f;
+    --warn: #e0b25c;
+    --err: #f08a80;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+a { color: var(--accent); }
+.top {
+  display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid var(--line); background: var(--surface);
+}
+.brand { font-weight: 700; text-decoration: none; color: var(--ink); letter-spacing: -0.01em; }
+nav { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; }
+nav a { text-decoration: none; color: var(--ink); }
+nav a:hover { color: var(--accent); }
+main { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-size: 1.6rem; letter-spacing: -0.02em; margin: 0 0 8px; }
+h2 { font-size: 1.1rem; margin: 0 0 8px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 18px; margin: 16px 0;
+}
+.card.narrow { max-width: 440px; margin: 48px auto; }
+.card.empty { border-style: dashed; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.grid .card { margin: 0; }
+.grid + .card { margin-top: 16px; }
+.muted { color: var(--muted); }
+label { display: block; font-weight: 600; margin: 12px 0 6px; }
+label.check { font-weight: 400; display: flex; gap: 8px; align-items: center; }
+input[type=email], input[type=password], input[type=text], input:not([type]), textarea {
+  width: 100%; padding: 10px 12px; font: inherit; color: var(--ink);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+}
+input.code { font-size: 1.5rem; letter-spacing: .3em; text-align: center; font-variant-numeric: tabular-nums; }
+textarea { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 14px; resize: vertical; }
+input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+button, .button {
+  display: inline-block; margin-top: 12px; padding: 10px 16px; font: inherit; font-weight: 600;
+  color: var(--accent-ink); background: var(--accent); border: 0; border-radius: 8px;
+  cursor: pointer; text-decoration: none;
+}
+button.secondary, .button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+button.danger { background: var(--err); color: #fff; }
+button.link { background: none; color: var(--accent); padding: 0; margin: 0; font-weight: 400; }
+button.link.danger { color: var(--err); margin-top: 8px; }
+button[disabled] { opacity: .6; cursor: progress; }
+form.inline { display: inline; }
+.note { padding: 10px 12px; border-radius: 8px; background: var(--bg); border-left: 3px solid var(--line); }
+.note.ok { border-color: var(--ok); }
+.note.warn { border-color: var(--warn); }
+.note.err, .err { border-color: var(--err); color: var(--err); }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; }
+.dot.ok { background: var(--ok); }
+.dot.warn { background: var(--warn); }
+.row { display: flex; gap: 16px; align-items: center; }
+.row button { margin-top: 12px; }
+.row span { margin-top: 12px; }
+.files { list-style: none; margin: 0; padding: 0; }
+.files li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.files li:last-child { border-bottom: 0; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; overflow-wrap: anywhere; }
+td button.link, td button.link.danger { margin: 0; }
+th { font-size: .85rem; color: var(--muted); font-weight: 600; }
+.danger-zone { border-color: color-mix(in srgb, var(--err) 35%, var(--line)); }

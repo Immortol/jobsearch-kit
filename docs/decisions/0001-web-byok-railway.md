@@ -1,13 +1,13 @@
-# 0001 · Веб-панель, BYOK, Railway — 2026-11-02
+# 0001 · Web panel, BYOK, Railway — 2026-11-02
 
-**Контекст.** Комплект скиллов для приложения Claude работает, но настройка сложная, а уровень Pro требует Mac. Цель на долгий срок — полноценная панель для поиска работы.
+**Context.** The skills kit for the Claude app works, but setup is complicated, and the Pro tier requires a Mac. The long-term goal is a full job-search panel.
 
-**Решение.**
-- Веб-приложение (не Telegram-бот): в долгосроке нужна полноценная панель.
-- Каждый пользователь платит за API сам своим ключом (BYOK). Первого тестировщика оплачивает Александр (отдельный workspace с лимитом).
-- Первые пользователи — 2–5 друзей.
-- Хостинг — Railway, отдельный проект (бот Visited уже там, в своём проекте).
-- Разработка — в этом репозитории: один этап = одна ветка = один чат, решения в `docs/decisions/`.
-- Скиллы — единый источник для веба и для комплекта в приложении Claude.
+**Decision.**
+- A web application (not a Telegram bot): a full panel is needed long term.
+- Every user pays for the API themselves with their own key (BYOK). Alexander pays for the first tester (separate workspace with a limit).
+- First users — 2–5 friends.
+- Hosting — Railway, a separate project (the Visited bot is already there, in its own project).
+- Development happens in this repository: one stage = one branch = one chat, decisions in `docs/decisions/`.
+- Skills are the single source for both the web app and the Claude-app kit.
 
-**Отвергли.** Telegram-бот как основной интерфейс (меньше работы, но не панель); оплата внутри приложения (рано для 2–5 человек); Gmail OAuth (проверка Google, платный аудит безопасности).
+**Rejected.** Telegram bot as the main interface (less work, but not a panel); in-app payments (too early for 2–5 people); Gmail OAuth (Google verification, paid security audit) — *revised by 0008: not required below 100 users.*

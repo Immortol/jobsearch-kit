@@ -1,28 +1,33 @@
-# План
+# Plan
 
-## Цель
-Веб-панель поиска работы: анкета → правдивое резюме → вакансии (сканер + рассылки) → оценка → пакеты документов → собеседования → обзор недели и развитие. Работает на Claude API, каждый пользователь платит Anthropic сам своим ключом (BYOK).
+## Goal
+A job-search web panel: questionnaire → truthful CV → vacancies (scanner + job alerts) → assessment → application packages → interviews → weekly review and growth. Runs on the Claude API; every user pays Anthropic directly with their own key (BYOK).
 
-## Рамки MVP
-- 2–5 пользователей, друзья владельца. Первый тестировщик — на ключе Александра (отдельный workspace в консоли Anthropic с месячным лимитом).
-- Не делаем в MVP: оплату внутри приложения, Gmail-доступ (вместо него — адрес для пересылки писем), мобильное приложение, hh.ru напрямую (API закрыт с 04.2026 — только через рассылки).
-- Ориентир расходов API: $10–20 / пользователь / месяц (Haiku на массовой оценке, Sonnet на документах, Batch API ночью, кэш правил). Хостинг: Railway, отдельный проект, €5–20 / месяц.
+## MVP scope
+- 2–5 users, friends of the owner. The first tester runs on Alexander's key (separate workspace in the Anthropic console with a monthly limit).
+- Gmail: users connect their own Gmail (read, drafts, labels — never send), decision 0008.
+- Not in the MVP: in-app payments, mobile app, hh.ru directly (API closed since 04.2026 — job alerts only).
+- API cost target: $10–20 / user / month (Haiku for bulk assessment, Sonnet for documents, Batch API at night, rules caching). Hosting: Railway, separate project, €5–20 / month.
 
-## Этапы
-Статусы: `готово` · `в работе` · `далее` · `потом`.
+## Stages
+Statuses: `done` · `in progress` · `next` · `later`.
 
-| # | Этап | Что Александр проверяет (приёмка) | Статус |
+| # | Stage | What Alexander checks (acceptance) | Status |
 |---|---|---|---|
-| 0 | Репозиторий, CLAUDE.md, план, архитектура (черновик), скиллы в репо, сборка ZIP | архитектура утверждена («гоу» по `ARCHITECTURE.md`); ZIP из `dist/` совпадают с комплектом v1.1 | в работе |
-| 1 | Каркас: сервис на Railway, Postgres, вход по ссылке на почту, хранение API-ключа (шифрованно), правила пользователя | заходит по ссылке из письма, вводит ключ, видит пустую панель | далее |
-| 2 | «Мозг»: агент на скиллах через API + чат в панели | пишет в чат «вот вакансия <ссылка>» → получает оценку по правилам | потом |
-| 3 | Анкета и резюме: анкета в панели, правила из ответов, мастер-резюме (DOCX/PDF) | проходит настройку как новый пользователь, скачивает резюме | потом |
-| 4 | Вакансии: пакет документов (письмо PDF), трекер в панели (+ выгрузка в Google Таблицу) | один настоящий пакет; строка в трекере | потом |
-| 5 | Ночь: сканер career-ops на сервере, адрес для пересылки рассылок, оценка (Batch), утренняя сводка письмом и в панели | три утра подряд приходит сводка | потом |
-| 6 | Собеседования, обзор недели, развитие | карточка к интервью, пробное интервью, обзор недели | потом |
-| 7 | Пилот с тестировщиком | неделя работы без вмешательства | потом |
+| 0 | Repository, CLAUDE.md, plan, architecture (draft), skills in repo, ZIP build | architecture approved ("go" on `ARCHITECTURE.md`); ZIPs from `dist/` match kit v1.1 | done |
+| 1 | Skeleton: service on Railway, Postgres, email-link login, API key storage (encrypted), user rules | logs in via a link from an email, enters a key, sees an empty panel | done (real API key check moved to stage 2) |
+| 2 | "Brain": skills-based agent via the API + chat in the panel | enters a real API key; writes "here is a vacancy <link>" in chat → gets an assessment per their rules | next |
+| 3 | Questionnaire and CV: questionnaire in the panel, rules from answers, master CV (DOCX/PDF) | goes through setup as a new user, downloads the CV | later |
+| 4 | Vacancies: application package (PDF letter), Gmail connection + draft in Gmail, tracker in the panel (+ export to Google Sheets) | one real package; its draft in Gmail; a row in the tracker | later |
+| 5 | Night: career-ops scanner on the server, job alerts and employer replies read from Gmail, assessment (Batch), morning digest by email and in the panel | digest arrives three mornings in a row; a reply updates the tracker | later |
+| 6 | Interviews, weekly review, growth | interview card, mock interview, weekly review | later |
+| 7 | Pilot with the tester | a week of use without intervention | later |
 
-## Бэклог
-- Оплата внутри приложения (вариант Б) — когда будет 10–20 довольных пользователей.
-- Gmail OAuth (требует проверки Google) — только если пересылки окажется мало.
-- Подтверждение в рыночных пакетах IL/RU по итогам пилотов.
+## Backlog
+- In-app payments (option B) — once there are 10–20 happy users.
+- Forwarding address for users not on Gmail (or if Google tightens rules for unverified apps) — see 0004/0008.
+- Google verification of the Gmail connection — only if the panel grows past 100 users.
+- Confirmation of the IL/RU market packages after pilots.
+- Railway Infrastructure as Code (`.railway/railway.ts`) to keep service settings in the repo; for now they are set on the service directly.
+- Custom domain for the panel (e.g. `app.almoti.com`) instead of `*.up.railway.app`.
+- `build_kit.sh`: version number in the bundle archive name and its inner folder (`Jobsearch-Kit-v1.1/`, as in the v1.1 release); currently `Jobsearch-Kit/`.

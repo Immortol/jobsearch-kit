@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {# htmx 2 does not swap 4xx/5xx by default; our error responses carry the message to show. #}
+  <meta name="htmx-config" content='{"includeIndicatorStyles": false, "responseHandling": [{"code": "204", "swap": false}, {"code": "[23]..", "swap": true}, {"code": "[45]..", "swap": true, "error": true}]}'>
+  <title>{% block title %}Jobsearch Kit{% endblock %}</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/htmx.min.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/">Jobsearch Kit</a>
+    {% if user %}
+    <nav>
+      <a href="/panel">{{ _("Panel") }}</a>
+      <a href="/rules">{{ _("Rules") }}</a>
+      <a href="/settings/key">{{ _("API key") }}</a>
+      <a href="/account">{{ _("Account") }}</a>
+      {% if is_owner %}<a href="/admin/invites">{{ _("Invitations") }}</a>{% endif %}
+      <form method="post" action="/logout" class="inline">
+        <button class="link" type="submit">{{ _("Sign out") }}</button>
+      </form>
+    </nav>
+    {% endif %}
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
