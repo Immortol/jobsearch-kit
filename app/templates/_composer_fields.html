@@ -1,0 +1,9 @@
+{# Message box, paperclip and send button; used by both chat forms. #}
+<textarea id="message" name="message" rows="3" placeholder="{{ placeholder }}"></textarea>
+<div class="composer-row">
+  <label class="attach" title="{{ _('Attach a file: PDF, Word or text, up to 5 MB') }}">
+    <input type="file" name="file" accept=".pdf,.docx,.txt,.md" data-attach>
+    <span aria-hidden="true">📎</span><span class="attach-name" data-attach-name>{{ _("Attach a file") }}</span>
+  </label>
+  <button type="submit"{% if running %} disabled{% endif %}>{{ _("Send") }}</button>
+</div>

@@ -4,13 +4,16 @@ import json
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse, Response
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app import auth
 from app.auth import require_user
 from app.chat import spend
 from app.db import get_db
-from app.models import User, utcnow
+from app.files import list_files
+from app.intake import get_questionnaire
+from app.models import CvVersion, User, utcnow
 from app.rules import list_rules
 from app.web import render
 
@@ -25,6 +28,7 @@ def account(request: Request, user: User = Depends(require_user)):
 def export_data(db: Session, user: User) -> dict:
     key = user.api_key
     spent = spend(db, user)
+    q = get_questionnaire(db, user)
     return {
         "exported_at": utcnow().isoformat(),
         "email": user.email,
@@ -43,6 +47,18 @@ def export_data(db: Session, user: User) -> dict:
         "rules": [
             {"name": r.name, "content": r.content, "updated_at": r.updated_at.isoformat()}
             for r in list_rules(db, user)
+        ],
+        "questionnaire": {"prefill": q.prefill, "answers": q.answers} if q else None,
+        "cv_versions": [
+            {"created_at": v.created_at.isoformat(), "content": v.content}
+            for v in db.scalars(select(CvVersion).where(CvVersion.user_id == user.id)
+                                .order_by(CvVersion.id))
+        ],
+        "files": [
+            {"name": f.filename, "kind": f.kind, "size": f.size,
+             "created_at": f.created_at.isoformat(),
+             "note": "Download from the Documents page of the panel."}
+            for f in list_files(db, user)
         ],
     }
 

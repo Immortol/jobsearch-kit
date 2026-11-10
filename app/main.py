@@ -13,7 +13,7 @@ from sqlalchemy import text
 from app.auth import NotAuthenticated, NotOwner
 from app.config import get_settings
 from app.db import get_engine
-from app.routes import account, admin, chat, login, panel, rules
+from app.routes import account, admin, chat, files, login, panel, questionnaire, rules
 from app.web import is_htmx, render
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -26,8 +26,8 @@ def create_app() -> FastAPI:
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")),
               name="static")
-    for r in (login.router, panel.router, chat.router, rules.router, account.router,
-              admin.router):
+    for r in (login.router, panel.router, chat.router, chat.setup_router, questionnaire.router,
+              files.router, rules.router, account.router, admin.router):
         app.include_router(r)
 
     @app.middleware("http")
@@ -47,10 +47,10 @@ def create_app() -> FastAPI:
         # Not "no-referrer": with it browsers send "Origin: null" on form posts, which the check
         # above rejects. "same-origin" still never leaks URLs (login tokens) to other sites.
         response.headers["Referrer-Policy"] = "same-origin"
-        response.headers["Content-Security-Policy"] = (
+        response.headers.setdefault("Content-Security-Policy", (
             "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
             "frame-ancestors 'none'; form-action 'self'"
-        )
+        ))  # a route may set its own (the questionnaire page, decision 0010)
         # Method and path only: query strings (login tokens) and bodies (API keys) never hit logs.
         log.info("%s %s %s %.0fms", request.method, request.url.path, response.status_code,
                  (time.monotonic() - started) * 1000)

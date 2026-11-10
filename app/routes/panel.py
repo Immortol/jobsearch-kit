@@ -7,7 +7,9 @@ from sqlalchemy.orm import Session
 from app.anthropic_keys import KeyCheck, KeyChecker, get_key_checker, looks_like_api_key
 from app.auth import optional_user, require_user
 from app.db import get_db
+from app.intake import get_questionnaire
 from app.models import ApiKey, User, utcnow
+from app.routes.files import latest_cv
 from app.rules import list_rules
 from app.security import encrypt_secret
 from app.web import is_htmx, render
@@ -22,7 +24,12 @@ def root(user: User | None = Depends(optional_user)):
 
 @router.get("/panel")
 def panel(request: Request, user: User = Depends(require_user), db: Session = Depends(get_db)):
-    return render(request, "panel.html", user=user, rules_count=len(list_rules(db, user)))
+    rules = list_rules(db, user)
+    questionnaire = get_questionnaire(db, user)
+    return render(request, "panel.html", user=user, rules_count=len(rules),
+                  setup_started=any(r.name == "00_Setup_Status.md" for r in rules),
+                  has_questionnaire=questionnaire is not None and questionnaire.prefill is not None,
+                  cv=latest_cv(db, user))
 
 
 def _key_page(request: Request, user: User, status: str | None = None, status_code: int = 200):

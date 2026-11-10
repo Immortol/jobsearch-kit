@@ -43,6 +43,9 @@ class User(Base):
         back_populates="user", cascade="all, delete-orphan", passive_deletes=True,
         order_by="Chat.updated_at.desc()",
     )
+    files: Mapped[list["UserFile"]] = relationship(
+        cascade="all, delete-orphan", passive_deletes=True, order_by="UserFile.id.desc()",
+    )
 
 
 class LoginToken(Base):
@@ -139,11 +142,15 @@ class ChatMessage(Base):
     api_messages: Mapped[list] = mapped_column(JSON, default=list)
     status: Mapped[str] = mapped_column(String(16), default="done")  # running, done, error
     error: Mapped[str | None] = mapped_column(String(32))
+    # Answer buttons offered by the agent (offer_choices), and an attached file of the person.
+    choices: Mapped[list | None] = mapped_column(JSON)
+    file_id: Mapped[int | None] = mapped_column(ForeignKey("user_files.id", ondelete="SET NULL"))
     cost_usd: Mapped[Decimal] = mapped_column(Numeric(12, 6), default=Decimal(0))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     chat: Mapped[Chat] = relationship(back_populates="messages")
+    file: Mapped["UserFile | None"] = relationship(lazy="joined")
 
 
 class UsageRecord(Base):
@@ -160,3 +167,45 @@ class UsageRecord(Base):
     purpose: Mapped[str] = mapped_column(String(32), default="chat")
     usage: Mapped[dict] = mapped_column(JSON, default=dict)
     cost_usd: Mapped[Decimal] = mapped_column(Numeric(12, 6))
+
+
+class UserFile(Base):
+    """A file of the user: an upload or a generated document (decision 0010)."""
+
+    __tablename__ = "user_files"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(16))  # upload, cv_docx, cv_pdf
+    filename: Mapped[str] = mapped_column(String(200))
+    content_type: Mapped[str] = mapped_column(String(100))
+    size: Mapped[int]
+    data: Mapped[bytes] = mapped_column(LargeBinary, deferred=True)
+    text: Mapped[str | None] = mapped_column(Text, deferred=True)  # extracted text of uploads
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class CvVersion(Base):
+    """A saved master CV: the structured content and the two files rendered from it."""
+
+    __tablename__ = "cv_versions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    content: Mapped[dict] = mapped_column(JSON)
+    docx_id: Mapped[int | None] = mapped_column(ForeignKey("user_files.id", ondelete="SET NULL"))
+    pdf_id: Mapped[int | None] = mapped_column(ForeignKey("user_files.id", ondelete="SET NULL"))
+    pages: Mapped[int | None]
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Questionnaire(Base):
+    """The questionnaire page's documents (`intake/prefill`, `intake/answers`)."""
+
+    __tablename__ = "questionnaires"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"),
+                                         primary_key=True)
+    prefill: Mapped[dict | None] = mapped_column(JSON)
+    answers: Mapped[dict | None] = mapped_column(JSON)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

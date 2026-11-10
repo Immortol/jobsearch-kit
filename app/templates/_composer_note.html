@@ -1,7 +1,2 @@
 {# Returned instead of new messages when sending fails; htmx swaps it into #composer-note. #}
-<div id="composer-note" hx-swap-oob="true">
-  {% if error == "busy" %}<p class="note warn">{{ _("Wait until the assistant finishes the current reply.") }}</p>
-  {% elif error == "no_key" %}{% include "_no_key.html" %}
-  {% else %}<p class="note err">{{ _("Write a message (up to 20,000 characters).") }}</p>
-  {% endif %}
-</div>
+<div id="composer-note" hx-swap-oob="true">{% include "_composer_error.html" %}</div>

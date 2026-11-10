@@ -1,6 +1,6 @@
 # Architecture
 
-> Status: **approved 2026-11-02** (stage 0). Key decisions: `docs/decisions/0002-stack-fastapi-htmx.md`, `docs/decisions/0003-scanner-inside-worker.md`, `docs/decisions/0009-agent-messages-api.md`.
+> Status: **approved 2026-11-02** (stage 0). Key decisions: `docs/decisions/0002-stack-fastapi-htmx.md`, `docs/decisions/0003-scanner-inside-worker.md`, `docs/decisions/0009-agent-messages-api.md`, `docs/decisions/0010-setup-questionnaire-cv-files.md`.
 
 ## Principles
 1. **Simple and cheap to run**: 2–5 users, one assistant developer. As few services as possible.
@@ -41,17 +41,17 @@ Only Python code writes to the database; the scanner hands its output to the wor
 - **User API key**: stored encrypted (encryption key in an environment variable), never written to logs (decision 0005).
 - **UI language**: English in code, translations in `app/locales/` (decision 0006).
 - **Models**: Haiku — bulk vacancy assessment and email parsing; Sonnet — documents, interviews, review. User rules are cached; Batch API at night (−50%).
-- **Files** (CVs, PDF letters): generated on the server, stored in Railway object storage.
+- **Files** (CVs, PDF letters, uploads): generated on the server, stored in Postgres (`user_files`, decision 0010). CV: structured content from the agent → DOCX (our template) → PDF via LibreOffice.
 - **Tracker**: a table in the panel; export to Google Sheets via a service account (no user OAuth), stage 4.
 
 ## Skills on the web (decision 0009)
 The skills are written for the Claude app: "Rules/ in the project", Artifact, Gmail connector, scheduling. On the web an agent on the Messages API executes them (`app/agent.py`):
 - **System prompt** = a short platform adapter + the catalog of skills enabled in the panel (name and description). Claude loads the skill it needs with `load_skill` and its `references/` with `read_skill_file`.
-- **Agent tools** (ours): `read_rules` / `write_rules` (user rules in the DB; changes logged in `CHANGELOG.md`); later `tracker_*`, `make_letter_pdf`, `make_cv`, `list_new_vacancies`, `gmail_*`. Anthropic server tools: `web_search`, `web_fetch`.
+- **Agent tools** (ours): `read_rules` / `write_rules` (user rules in the DB; changes logged in `CHANGELOG.md`); `offer_choices` (answer buttons); `questionnaire_prefill` / `questionnaire_answers` (the skill's questionnaire page, served at `/questionnaire` with a storage shim); `save_cv` / `read_cv`; `list_files` / `read_file`; later `tracker_*`, `make_letter_pdf`, `list_new_vacancies`, `gmail_*`. Anthropic server tools: `web_search`, `web_fetch`.
 - **Platform adapter**: "in this environment 'project/Rules' = the read_rules/write_rules tools; what is not available yet is skipped". The `SKILL.md` files stay unchanged so the Claude-app kit keeps working.
 - **Enabled skills** are listed in `app/skills.py` (`ENABLED_SKILLS`): each stage turns on the skills whose tools exist.
 - **Cost**: every call's `usage` is priced (`app/pricing.py`) and stored; the panel always shows the spend this month and in total.
 
 ## Open questions (resolved in their stages)
 - ~~Messages API + own tools vs Skills API (stage 2)~~ — Messages API, decision 0009.
-- File storage: Railway bucket vs Postgres (stage 3).
+- ~~File storage: Railway bucket vs Postgres (stage 3)~~ — Postgres for now, decision 0010; revisit in stage 4.

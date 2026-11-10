@@ -1,0 +1,7 @@
+{% if error == "busy" %}<p class="note warn">{{ _("Wait until the assistant finishes the current reply.") }}</p>
+{% elif error == "no_key" %}{% include "_no_key.html" %}
+{% elif error == "file_too_big" %}<p class="note err">{{ _("The file is larger than 5 MB.") }}</p>
+{% elif error == "file_type" %}<p class="note err">{{ _("This file type is not supported. Send a PDF, Word (.docx) or text file.") }}</p>
+{% elif error in ("file_broken", "file_empty") %}<p class="note err">{{ _("Could not read this file. Try a PDF, or paste the text into the message.") }}</p>
+{% else %}<p class="note err">{{ _("Write a message (up to 20,000 characters).") }}</p>
+{% endif %}

@@ -124,3 +124,21 @@ th { font-size: .85rem; color: var(--muted); font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
 .composer textarea { font-family: inherit; font-size: 16px; }
 .chat-delete { margin-top: 8px; }
+
+/* Setup and documents (decision 0010) */
+ul.links { list-style: none; padding: 0; margin: 12px 0 0; display: flex; gap: 16px; flex-wrap: wrap; }
+.composer-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
+.attach { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: var(--muted);
+  font-size: .9rem; min-width: 0; }
+.attach input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.attach:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.attach-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55vw; }
+.attach.has-file { color: var(--ink); }
+.file-chip { display: block; margin-bottom: 6px; color: inherit; font-size: .9rem; text-decoration: underline; }
+.msg .md a { overflow-wrap: anywhere; }
+.choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: -4px; }
+.choices form { margin: 0; width: auto; display: block; }
+button.choice { background: var(--surface); color: var(--accent); border: 1px solid var(--accent);
+  border-radius: 999px; padding: 8px 14px; font-weight: 500; }
+button.choice:hover { background: var(--accent); color: var(--accent-ink); }
+.choices.answered { display: none; }

@@ -141,7 +141,7 @@ def test_write_rules_logs_changes(db, user):
 
 
 def test_unknown_tool_and_skill_are_errors(db, user):
-    fake = FakeClaude(tool_call(("t1", "load_skill", {"name": "jobsearch-setup"}),
+    fake = FakeClaude(tool_call(("t1", "load_skill", {"name": "jobsearch-scanner"}),
                                 ("t2", "rm_rf", {})), reply("ок"))
     run(db, user, fake)
     results = fake.requests[1]["messages"][-1]["content"]
@@ -173,8 +173,8 @@ def test_call_cost():
 
 def test_skills_catalog_and_files():
     names = [s.name for s in skills.catalog()]
-    assert names == ["jobsearch-vacancy"]
-    assert skills.load_skill("jobsearch-setup") is None
+    assert names == ["jobsearch-setup", "jobsearch-vacancy"]
+    assert skills.load_skill("jobsearch-scanner") is None
     assert skills.read_skill_file("jobsearch-vacancy", "references/letter.md").strip()
     for bad in ["../jobsearch-setup/SKILL.md", "/etc/passwd", "references/../../../CLAUDE.md"]:
         assert skills.read_skill_file("jobsearch-vacancy", bad) is None

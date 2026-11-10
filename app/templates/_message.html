@@ -1,6 +1,6 @@
 {% set m = v.m %}
 {% if m.role == "user" %}
-<div class="msg user" id="msg-{{ m.id }}">{{ m.text }}</div>
+<div class="msg user" id="msg-{{ m.id }}">{% if m.file_id %}<a class="file-chip" href="/files/{{ m.file_id }}">📎 {{ v.file_name or _("File") }}</a>{% endif %}{{ m.text }}</div>
 {% else %}
 <div class="msg assistant {{ m.status }}" id="msg-{{ m.id }}"
      {% if m.status == "running" %}hx-get="/chats/{{ m.chat_id }}/messages/{{ m.id }}"
@@ -14,5 +14,16 @@
   {% if v.cost %}<p class="cost muted">{{ _("This reply: {cost}", cost=v.cost|money) }}</p>{% endif %}
   {% endif %}
 </div>
+{% if m.status == "done" and m.choices and v.is_last %}
+<div class="choices" data-choices>
+  {% for option in m.choices %}
+  <form method="post" action="/chats/{{ m.chat_id }}/messages" hx-post="/chats/{{ m.chat_id }}/messages"
+        hx-target="#thread" hx-swap="beforeend">
+    <input type="hidden" name="message" value="{{ option }}">
+    <button type="submit" class="choice">{{ option }}</button>
+  </form>
+  {% endfor %}
+</div>
+{% endif %}
 {% if finished_now %}{% with oob = true %}{% include "_spend.html" %}{% endwith %}{% endif %}
 {% endif %}

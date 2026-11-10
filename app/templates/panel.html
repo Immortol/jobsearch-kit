@@ -22,6 +22,26 @@
 </div>
 
 <section class="card">
+  <h2>{{ _("Setup") }}</h2>
+  {% if setup_started %}
+  <p>{{ _("The assistant remembers where you stopped. Each meeting takes 15–20 minutes.") }}</p>
+  {% else %}
+  <p>{{ _("Three short meetings with the assistant: your CV, your strengths, your search. After the first one you already have a CV.") }}</p>
+  {% endif %}
+  {% if user.api_key %}
+  <form method="post" action="/setup" class="inline">
+    <button type="submit">{{ _("Continue setup") if setup_started else _("Start setup") }}</button>
+  </form>
+  {% else %}
+  {% include "_no_key.html" %}
+  {% endif %}
+  <ul class="links">
+    {% if has_questionnaire %}<li><a href="/questionnaire" target="_blank" rel="noopener">{{ _("Questionnaire") }}</a></li>{% endif %}
+    {% if cv %}<li><a href="/files">{{ _("Your CV") }}</a></li>{% endif %}
+  </ul>
+</section>
+
+<section class="card">
   <h2>{{ _("Chat with the assistant") }}</h2>
   <p>{{ _("Send a link to a vacancy or its text: the assistant opens it and assesses it against your rules.") }}</p>
   <a class="button" href="/chats">{{ _("Open chat") }}</a>
@@ -29,6 +49,6 @@
 
 <section class="card empty">
   <h2>{{ _("Coming next") }}</h2>
-  <p class="muted">{{ _("Questionnaire, CV, application packages and the tracker will appear here step by step.") }}</p>
+  <p class="muted">{{ _("Application packages, Gmail drafts and the tracker will appear here step by step.") }}</p>
 </section>
 {% endblock %}

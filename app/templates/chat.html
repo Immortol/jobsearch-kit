@@ -11,11 +11,10 @@
 <div id="composer-note"></div>
 {% if user.api_key %}
 <form method="post" action="/chats/{{ chat.id }}/messages" hx-post="/chats/{{ chat.id }}/messages"
-      hx-target="#thread" hx-swap="beforeend" class="composer card" data-composer>
+      hx-target="#thread" hx-swap="beforeend" hx-encoding="multipart/form-data"
+      enctype="multipart/form-data" class="composer card" data-composer>
   <label class="sr-only" for="message">{{ _("Message") }}</label>
-  <textarea id="message" name="message" rows="3" required
-            placeholder="{{ _('Write a message…') }}"></textarea>
-  <button type="submit"{% if running %} disabled{% endif %}>{{ _("Send") }}</button>
+  {% with placeholder = _("Write a message…") %}{% include "_composer_fields.html" %}{% endwith %}
 </form>
 {% else %}
 {% include "_no_key.html" %}
