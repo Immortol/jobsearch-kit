@@ -6,9 +6,9 @@
   {# htmx 2 does not swap 4xx/5xx by default; our error responses carry the message to show. #}
   <meta name="htmx-config" content='{"includeIndicatorStyles": false, "responseHandling": [{"code": "204", "swap": false}, {"code": "[23]..", "swap": true}, {"code": "[45]..", "swap": true, "error": true}]}'>
   <title>{% block title %}Jobsearch Kit{% endblock %}</title>
-  <link rel="stylesheet" href="/static/app.css">
-  <script src="/static/htmx.min.js" defer></script>
-  <script src="/static/chat.js" defer></script>
+  <link rel="stylesheet" href="{{ static('app.css') }}">
+  <script src="{{ static('htmx.min.js') }}" defer></script>
+  <script src="{{ static('chat.js') }}" defer></script>
 </head>
 <body>
   <header class="top">

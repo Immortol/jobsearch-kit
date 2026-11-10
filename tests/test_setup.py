@@ -162,7 +162,7 @@ def test_questionnaire_page_and_storage(client, outbox, fake, db):
     assert page.status_code == 200
     html, csp = qroute.page()
     assert page.text == html and page.headers["content-security-policy"] == csp
-    assert '<script src="/static/questionnaire-db.js"></script>\n<script>' in html
+    assert re.search(r'<script src="/static/questionnaire-db.js\?v=\w+"></script>\n<script>', html)
     assert "fonts.googleapis.com" not in html
     script = re.search(r"<script>(.*?)</script>", html, re.S).group(1)
     import base64

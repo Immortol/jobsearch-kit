@@ -14,11 +14,11 @@ from app.auth import require_user
 from app.db import get_db
 from app.intake import get_questionnaire, set_document
 from app.models import User
+from app.web import static_url
 
 router = APIRouter(prefix="/questionnaire")
 
 ASSET = ("jobsearch-setup", "assets/questionnaire.html")
-SHIM = '<script src="/static/questionnaire-db.js"></script>\n'
 MAX_ANSWERS_BYTES = 200_000
 
 
@@ -31,7 +31,8 @@ def page() -> tuple[str, str]:
     """
     html = (skills.skills_dir() / ASSET[0] / ASSET[1]).read_text(encoding="utf-8")
     html = re.sub(r'<link[^>]+(fonts\.googleapis\.com|fonts\.gstatic\.com)[^>]*>\n?', "", html)
-    html = html.replace("<script>", SHIM + "<script>", 1)
+    shim = f'<script src="{static_url("questionnaire-db.js")}"></script>\n'
+    html = html.replace("<script>", shim + "<script>", 1)
     scripts = re.findall(r"<script>(.*?)</script>", html, flags=re.S)
     hashes = " ".join(
         "'sha256-" + base64.b64encode(hashlib.sha256(s.encode()).digest()).decode() + "'"

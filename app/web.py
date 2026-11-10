@@ -1,6 +1,8 @@
 """Template rendering helpers."""
 
+import hashlib
 from decimal import Decimal
+from functools import lru_cache
 from pathlib import Path
 
 from fastapi import Request
@@ -28,6 +30,18 @@ def money(value: object) -> str:
 
 
 templates.env.filters["money"] = money
+
+STATIC_DIR = Path(__file__).parent / "static"
+
+
+@lru_cache
+def static_url(name: str) -> str:
+    """`/static/<name>?v=<content hash>`: browsers pick up a new version right after a deploy."""
+    digest = hashlib.sha256((STATIC_DIR / name).read_bytes()).hexdigest()[:10]
+    return f"/static/{name}?v={digest}"
+
+
+templates.env.globals["static"] = static_url
 
 
 def is_htmx(request: Request) -> bool:
