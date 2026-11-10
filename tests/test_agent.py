@@ -199,3 +199,32 @@ def test_classify_api_errors():
         is ClaudeFailure.NO_PERMISSION
     assert classify(anthropic.APIConnectionError(request=httpx.Request("POST", "https://x"))) \
         is ClaudeFailure.UNAVAILABLE
+
+
+def test_history_drops_earlier_web_results_and_citations():
+    history = build_history([
+        [{"role": "user", "content": [{"type": "text", "text": "найди"}]}],
+        [{"role": "assistant", "content": [
+            {"type": "server_tool_use", "id": "s1", "name": "web_search", "input": {"query": "x"}},
+            {"type": "web_search_tool_result", "tool_use_id": "s1", "content": [
+                {"type": "web_search_result", "url": "https://x", "title": "t",
+                 "encrypted_content": "e"}]},
+            {"type": "text", "text": "Нашёл", "citations": [
+                {"type": "web_search_result_location", "url": "https://x", "title": "t",
+                 "encrypted_index": "i", "cited_text": "c"}]},
+            {"type": "tool_use", "id": "t1", "name": "save_cv", "input": {}},
+        ]},
+         {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "t1",
+                                       "content": "ok"}]},
+         {"role": "assistant", "content": [
+             {"type": "server_tool_use", "id": "s2", "name": "web_fetch", "input": {}},
+             {"type": "web_fetch_tool_result", "tool_use_id": "s2", "content": {}}]}],
+        [{"role": "user", "content": [{"type": "text", "text": "заполнил"}]}],
+    ])
+    assert history[1]["content"] == [
+        {"type": "text", "text": "Нашёл"},
+        {"type": "tool_use", "id": "t1", "name": "save_cv", "input": {}},
+    ]
+    assert history[3] == {"role": "assistant",
+                          "content": [{"type": "text", "text": "(looked things up on the web)"}]}
+    assert [m["role"] for m in history] == ["user", "assistant", "user", "assistant", "user"]

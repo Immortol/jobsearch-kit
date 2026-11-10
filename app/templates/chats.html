@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}{{ _("Chat") }} · Jobsearch Kit{% endblock %}
+{% block title %}{{ _("My chats") }} · Jobsearch Kit{% endblock %}
 {% block content %}
-<h1>{{ _("Chat with the assistant") }}</h1>
+<h1>{{ _("My chats") }}</h1>
 <p class="muted">{{ _("Send a link to a vacancy or its text: the assistant opens it and assesses it against your rules.") }}</p>
 
 <section class="card">
@@ -18,7 +18,7 @@
 
 {% if chats %}
 <section class="card">
-  <h2>{{ _("Your chats") }}</h2>
+  <h2>{{ _("Earlier chats") }}</h2>
   <ul class="files">
     {% for c in chats %}
     <li><a href="/chats/{{ c.id }}">{{ c.title or _("Untitled") }}</a>

@@ -98,8 +98,8 @@ def setup_start(request: Request, user: User = Depends(require_user),
     if user.api_key is None:
         return RedirectResponse("/settings/key", status_code=303)
     started = read_rule(db, user, SETUP_STATUS) is not None
-    text = _("Let's continue the setup.") if started else \
-        _("I want to set up my job search.")
+    text = _("Let's continue the setup") if started else \
+        _("I want to set up my job search")
     return _start_chat(db, user, text, None, client, runner)
 
 

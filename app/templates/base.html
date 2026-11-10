@@ -16,10 +16,9 @@
     {% if user %}
     <nav>
       <a href="/panel">{{ _("Panel") }}</a>
-      <a href="/chats">{{ _("Chat") }}</a>
+      <a href="/chats">{{ _("My chats") }}</a>
       <a href="/files">{{ _("Documents") }}</a>
       <a href="/rules">{{ _("Rules") }}</a>
-      <a href="/settings/key">{{ _("API key") }}</a>
       <a href="/account">{{ _("Account") }}</a>
       {% if is_owner %}<a href="/admin/invites">{{ _("Invitations") }}</a>{% endif %}
       <form method="post" action="/logout" class="inline">

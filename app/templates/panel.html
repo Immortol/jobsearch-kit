@@ -3,23 +3,13 @@
 <h1>{{ _("Panel") }}</h1>
 <p class="muted">{{ _("Signed in as {email}", email=user.email) }}</p>
 
-<div class="grid">
-  <section class="card">
-    <h2>{{ _("API key") }}</h2>
-    {% if user.api_key %}
-    <p><span class="dot ok"></span>{{ _("Connected, ends with …{last4}", last4=user.api_key.last4) }}</p>
-    {% else %}
-    <p><span class="dot warn"></span>{{ _("Not connected yet") }}</p>
-    <a class="button" href="/settings/key">{{ _("Add key") }}</a>
-    {% endif %}
-  </section>
-
-  <section class="card">
-    <h2>{{ _("Rules") }}</h2>
-    <p>{{ _("Files: {count}", count=rules_count) }}</p>
-    <a href="/rules">{{ _("Open") }}</a>
-  </section>
-</div>
+{% if not user.api_key %}
+<section class="card">
+  <h2>{{ _("API key") }}</h2>
+  <p><span class="dot warn"></span>{{ _("Not connected yet") }}</p>
+  <a class="button" href="/settings/key">{{ _("Add key") }}</a>
+</section>
+{% endif %}
 
 <section class="card">
   <h2>{{ _("Setup") }}</h2>
@@ -32,20 +22,35 @@
   <form method="post" action="/setup" class="inline">
     <button type="submit">{{ _("Continue setup") if setup_started else _("Start setup") }}</button>
   </form>
-  {% else %}
-  {% include "_no_key.html" %}
   {% endif %}
-  <ul class="links">
-    {% if has_questionnaire %}<li><a href="/questionnaire" target="_blank" rel="noopener">{{ _("Questionnaire") }}</a></li>{% endif %}
-    {% if cv %}<li><a href="/files">{{ _("Your CV") }}</a></li>{% endif %}
-  </ul>
+  {% if has_questionnaire %}
+  <ul class="links"><li><a href="/questionnaire">{{ _("Questionnaire") }}</a></li></ul>
+  {% endif %}
 </section>
 
 <section class="card">
-  <h2>{{ _("Chat with the assistant") }}</h2>
+  <h2>{{ _("My chats") }}</h2>
   <p>{{ _("Send a link to a vacancy or its text: the assistant opens it and assesses it against your rules.") }}</p>
-  <a class="button" href="/chats">{{ _("Open chat") }}</a>
+  <a class="button" href="/chats">{{ _("Open my chats") }}</a>
 </section>
+
+<div class="grid">
+  <section class="card">
+    <h2>{{ _("Documents") }}</h2>
+    {% if cv %}
+    <p>{{ _("Master CV of {date}", date=cv.created_at.strftime("%d.%m.%Y")) }}</p>
+    {% else %}
+    <p class="muted">{{ _("No CV yet") }}</p>
+    {% endif %}
+    <a href="/files">{{ _("Open") }}</a>
+  </section>
+
+  <section class="card">
+    <h2>{{ _("Rules") }}</h2>
+    <p>{{ _("Files: {count}", count=rules_count) }}</p>
+    <a href="/rules">{{ _("Open") }}</a>
+  </section>
+</div>
 
 <section class="card empty">
   <h2>{{ _("Coming next") }}</h2>

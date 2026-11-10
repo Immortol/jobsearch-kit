@@ -94,17 +94,22 @@ th { font-size: .85rem; color: var(--muted); font-weight: 600; }
 .danger-zone { border-color: color-mix(in srgb, var(--err) 35%, var(--line)); }
 
 /* Spend counter (decision 0009) */
-.spend { flex-basis: 100%; font-size: .85rem; color: var(--muted); text-decoration: none; }
-.spend:hover { color: var(--accent); }
+.spend { flex-basis: 100%; margin: 0; font-size: .85rem; color: var(--muted); }
+.spend a { color: inherit; }
+.spend a:hover { color: var(--accent); }
+.spend a.warn { color: var(--warn); font-weight: 600; }
 
 /* Chat */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .chat-title { font-size: 1.2rem; overflow-wrap: anywhere; }
 .thread { display: flex; flex-direction: column; gap: 12px; margin: 16px 0; }
 .msg { padding: 12px 14px; border-radius: var(--radius); overflow-wrap: anywhere; }
+/* The person's messages: a tinted bubble, deliberately unlike the solid buttons. */
 .msg.user {
   align-self: flex-end; max-width: 88%; white-space: pre-wrap;
-  background: var(--accent); color: var(--accent-ink);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface)); color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--surface));
+  border-bottom-right-radius: 4px;
 }
 .msg.assistant { background: var(--surface); border: 1px solid var(--line); }
 .msg .md > :first-child { margin-top: 0; }

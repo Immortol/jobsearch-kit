@@ -174,7 +174,7 @@ def _run(message_id: int, client: ClaudeClient, live: LiveReply) -> None:
             client=client, api_key=decrypt_secret(user.api_key.encrypted_key),
             model=get_settings().agent_model, db=db, user=user,
             history=build_history(earlier, lambda fid: file_block(db, user, fid)),
-            progress=_RecordingProgress(live, user.id),
+            progress=_RecordingProgress(live, user.id), chat_id=chat.id,
         )
         reply.choices = result.choices
         reply.text = result.text

@@ -65,7 +65,7 @@ def test_setup_card_starts_and_continues(client, outbox, fake, db):
     r = client.post("/setup", follow_redirects=False)
     assert r.status_code == 303
     page = client.get(r.headers["location"]).text
-    assert "Хочу настроить поиск работы." in page and "Сегодня сделаем резюме" in page
+    assert "Хочу настроить поиск работы" in page and "Сегодня сделаем резюме" in page
     first = fake.requests[0]
     assert "jobsearch-setup" in first["system"][0]["text"]
     assert {t["name"] for t in first["tools"]} >= {"save_cv", "offer_choices",
@@ -79,7 +79,7 @@ def test_setup_card_starts_and_continues(client, outbox, fake, db):
     client.post(f"{r.headers['location']}/messages", data={"message": "да"}, headers=HTMX)
     assert "Продолжить настройку" in client.get("/panel").text
     r = client.post("/setup", follow_redirects=False)
-    assert "Продолжим настройку." in client.get(r.headers["location"]).text
+    assert "Продолжим настройку" in client.get(r.headers["location"]).text
 
 
 def test_choices_become_buttons(client, outbox, fake, db):
@@ -161,7 +161,9 @@ def test_questionnaire_page_and_storage(client, outbox, fake, db):
     page = client.get("/questionnaire")
     assert page.status_code == 200
     html, csp = qroute.page()
-    assert page.text == html and page.headers["content-security-policy"] == csp
+    assert page.text == html.replace(qroute.BAR_MARKER, qroute.bar_html())
+    assert page.headers["content-security-policy"] == csp
+    assert 'action="/questionnaire/done"' in page.text and "← В чат" in page.text
     assert re.search(r'<script src="/static/questionnaire-db.js\?v=\w+"></script>\n<script>', html)
     assert "fonts.googleapis.com" not in html
     script = re.search(r"<script>(.*?)</script>", html, re.S).group(1)
@@ -275,3 +277,52 @@ def test_files_are_private_and_in_export_and_deleted(client, outbox, fake, db):
     client.post("/account/delete", data={"confirm": "yes"})
     for model in (UserFile, Questionnaire, CvVersion):
         assert db.scalar(select(func.count()).select_from(model)) == 0
+
+
+def test_questionnaire_done_returns_to_its_chat(client, outbox, fake, db):
+    signed_in(client, outbox)
+    fake.queue(tool_call(("t1", "questionnaire_prefill", {"lang": "ru", "values": {}})),
+               reply("[Открыть анкету](/questionnaire)"))
+    url = client.post("/chats", data={"message": "анкета"}, follow_redirects=False) \
+        .headers["location"]
+    assert client.get("/questionnaire/back", follow_redirects=False).headers["location"] == url
+
+    fake.queue(tool_call(("t1", "questionnaire_answers", {})), reply("Прочитал анкету."))
+    r = client.post("/questionnaire/done", follow_redirects=False)
+    assert r.headers["location"] == url
+    page = client.get(url).text
+    assert "Я заполнил анкету" in page and "Прочитал анкету." in page
+
+    client.post(f"{url}/delete")
+    fake.queue(reply("ок"))
+    r = client.post("/questionnaire/done", follow_redirects=False)
+    assert r.headers["location"] != url and "Я заполнил анкету" in client.get(
+        r.headers["location"]).text
+
+
+def test_buttons_always_show_their_question_and_chats_get_names(client, outbox, fake, db):
+    signed_in(client, outbox)
+    fake.queue({"content": [
+        {"type": "tool_use", "id": "n1", "name": "set_chat_title",
+         "input": {"title": "Настройка · встреча 1"}},
+        {"type": "tool_use", "id": "c1", "name": "offer_choices",
+         "input": {"question": "Начнём?", "options": ["Да, давай", "Не сейчас"]}}],
+        "stop_reason": "tool_use", "usage": {"input_tokens": 10, "output_tokens": 5}})
+    url = client.post("/setup", follow_redirects=False).headers["location"]
+    page = client.get(url).text
+    assert "<p>Начнём?</p>" in page and 'value="Не сейчас"' in page
+    assert '<h1 class="chat-title">Настройка · встреча 1</h1>' in page
+    assert "Настройка · встреча 1" in client.get("/chats").text
+
+
+def test_header_shows_key_and_panel_order(client, outbox, fake):
+    login(client, outbox, OWNER)
+    page = client.get("/panel").text
+    assert "Нет API-ключа" in page
+    client.post("/settings/key", data={"api_key": KEY})
+    page = client.get("/panel").text
+    assert "Ключ …WxYz" in page and "Потрачено:" in page
+    order = [page.index(h) for h in ("<h2>Настройка</h2>", "<h2>Мои чаты</h2>",
+                                     "<h2>Документы</h2>", "<h2>Правила</h2>")]
+    assert order == sorted(order)
+    assert 'href="/settings/key">API-ключ</a>' not in page.split("</nav>")[0]

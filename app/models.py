@@ -208,4 +208,5 @@ class Questionnaire(Base):
                                          primary_key=True)
     prefill: Mapped[dict | None] = mapped_column(JSON)
     answers: Mapped[dict | None] = mapped_column(JSON)
+    chat_id: Mapped[int | None] = mapped_column(ForeignKey("chats.id", ondelete="SET NULL"))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
