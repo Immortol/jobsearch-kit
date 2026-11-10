@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Vacancies") }} · Jobsearch Kit{% endblock %}
+{% block content %}
+<h1>{{ _("Vacancies") }}</h1>
+
+<section class="card">
+  {% if user.api_key %}
+  <form method="post" action="/vacancies" class="composer paste" data-paste>
+    <label for="text">{{ _("Paste a link or the text of a vacancy") }}</label>
+    <textarea id="text" name="text" rows="3" required
+              placeholder="{{ _('https://… — several links at once are fine') }}"></textarea>
+    <div class="composer-row">
+      <span class="muted small">{{ _("Each vacancy becomes a card: assessment, and documents for 4–5.") }}</span>
+      <button type="submit">{{ _("Assess") }}</button>
+    </div>
+  </form>
+  {% else %}
+  {% include "_no_key.html" %}
+  {% endif %}
+  {% if added or repeat %}
+  <p class="note ok">
+    {% if added %}{{ _("Added: {n}.", n=added) }}{% endif %}
+    {% if repeat %}{{ _("Already in the feed: {n} — shown below as they are.", n=repeat) }}{% endif %}
+  </p>
+  {% endif %}
+</section>
+
+<form method="get" action="/vacancies" class="search" role="search">
+  <label class="sr-only" for="q">{{ _("Search") }}</label>
+  <input id="q" name="q" type="search" value="{{ q }}" placeholder="{{ _('Search: company, role, city') }}">
+  <input type="hidden" name="f" value="{{ f }}">
+  <button type="submit" class="secondary">{{ _("Find") }}</button>
+</form>
+<nav class="chips" aria-label="{{ _('Filter') }}">
+  {% for key, label in filters.items() %}
+  <a href="/vacancies?f={{ key }}{% if q %}&q={{ q|urlencode }}{% endif %}"{% if key == f %} class="on" aria-current="true"{% endif %}>{{ _(label) }}</a>
+  {% endfor %}
+</nav>
+
+<div class="feed">
+  {% for c in cards %}{% include "_vacancy_card.html" %}{% endfor %}
+  {% if not cards %}
+  <p class="muted">{% if total %}{{ _("Nothing found.") }}{% else %}{{ _("No vacancies yet. Paste the first link above.") }}{% endif %}</p>
+  {% endif %}
+</div>
+{% if page or more %}
+<nav class="pager">
+  {% if page %}<a href="/vacancies?f={{ f }}&q={{ q|urlencode }}&page={{ page - 1 }}">← {{ _("Newer") }}</a>{% endif %}
+  {% if more %}<a href="/vacancies?f={{ f }}&q={{ q|urlencode }}&page={{ page + 1 }}">{{ _("Older") }} →</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

@@ -107,13 +107,20 @@ class RuleFile(Base):
 
 
 class Chat(Base):
-    """A conversation with the assistant (decision 0009)."""
+    """A conversation with the assistant (decision 0009).
+
+    `kind`: "chat" — listed in My chats; "card" — the hidden thread of a vacancy card in the
+    feed; "story" — a vacancy's story, listed in My chats (decision 0011).
+    """
 
     __tablename__ = "chats"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     title: Mapped[str] = mapped_column(String(200), default="")
+    kind: Mapped[str] = mapped_column(String(16), default="chat", server_default="chat")
+    vacancy_id: Mapped[int | None] = mapped_column(
+        ForeignKey("vacancies.id", ondelete="CASCADE", name="fk_chats_vacancy_id"), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
@@ -176,12 +183,17 @@ class UserFile(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    kind: Mapped[str] = mapped_column(String(16))  # upload, cv_docx, cv_pdf
+    kind: Mapped[str] = mapped_column(String(16))
+    # upload, cv_docx, cv_pdf; letter_docx, letter_pdf, vcv_docx, vcv_pdf (vacancy package)
     filename: Mapped[str] = mapped_column(String(200))
     content_type: Mapped[str] = mapped_column(String(100))
     size: Mapped[int]
     data: Mapped[bytes] = mapped_column(LargeBinary, deferred=True)
     text: Mapped[str | None] = mapped_column(Text, deferred=True)  # extracted text of uploads
+    # Documents of a vacancy's package (letter, adapted CV), decision 0011.
+    vacancy_id: Mapped[int | None] = mapped_column(
+        ForeignKey("vacancies.id", ondelete="SET NULL", name="fk_user_files_vacancy_id"),
+        index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
@@ -210,3 +222,46 @@ class Questionnaire(Base):
     answers: Mapped[dict | None] = mapped_column(JSON)
     chat_id: Mapped[int | None] = mapped_column(ForeignKey("chats.id", ondelete="SET NULL"))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+VACANCY_STATUSES = (
+    "new",        # just added, the assessment is running
+    "assessed",   # assessed, no documents (score 1–3, or not made yet)
+    "prepared",   # documents ready
+    "applied",
+    "reply",      # the employer answered
+    "interview",
+    "offer",
+    "rejected",   # by the employer
+    "not_fit",    # the person or the assessment decided not to apply
+    "closed",     # closed, expired, agency only
+)
+STORY_STATUSES = ("reply", "interview", "offer")
+
+
+class Vacancy(Base):
+    """A vacancy in the feed and the tracker (decision 0011)."""
+
+    __tablename__ = "vacancies"
+    __table_args__ = (Index("ix_vacancies_user_created", "user_id", "created_at"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    url: Mapped[str | None] = mapped_column(String(2000))
+    url_key: Mapped[str | None] = mapped_column(String(2000), index=True)  # normalized, for repeats
+    source_text: Mapped[str | None] = mapped_column(Text)  # what the person pasted, if not a link
+    company: Mapped[str] = mapped_column(String(200), default="")
+    role: Mapped[str] = mapped_column(String(200), default="")
+    location: Mapped[str] = mapped_column(String(200), default="")
+    salary: Mapped[str] = mapped_column(String(200), default="")
+    language: Mapped[str] = mapped_column(String(16), default="")
+    score: Mapped[int | None]
+    status: Mapped[str] = mapped_column(String(16), default="new")
+    summary: Mapped[str] = mapped_column(Text, default="")      # the 3–5 line assessment
+    description: Mapped[str] = mapped_column(Text, default="")  # the essence of the ad
+    apply_how: Mapped[str] = mapped_column(String(300), default="")
+    deadline: Mapped[str] = mapped_column(String(100), default="")
+    next_step: Mapped[str] = mapped_column(String(300), default="")
+    notes: Mapped[str] = mapped_column(Text, default="")

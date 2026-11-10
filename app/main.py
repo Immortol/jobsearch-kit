@@ -13,7 +13,9 @@ from sqlalchemy import text
 from app.auth import NotAuthenticated, NotOwner
 from app.config import get_settings
 from app.db import get_engine
-from app.routes import account, admin, chat, files, login, panel, questionnaire, rules
+from app.routes import (
+    account, admin, chat, files, login, panel, questionnaire, rules, vacancies,
+)
 from app.web import is_htmx, render
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -26,8 +28,8 @@ def create_app() -> FastAPI:
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")),
               name="static")
-    for r in (login.router, panel.router, chat.router, chat.setup_router, questionnaire.router,
-              files.router, rules.router, account.router, admin.router):
+    for r in (login.router, panel.router, vacancies.router, chat.router, chat.setup_router,
+              questionnaire.router, files.router, rules.router, account.router, admin.router):
         app.include_router(r)
 
     @app.middleware("http")

@@ -1,0 +1,31 @@
+{# One vacancy in the feed (decision 0011). Polls itself while the assessment runs. #}
+{% set v = c.v %}
+<article class="vcard {{ v.status }}{% if c.running %} running{% endif %}" id="vacancy-{{ v.id }}"
+  {% if c.running %}hx-get="/vacancies/{{ v.id }}/card" hx-trigger="load delay:2s" hx-swap="outerHTML"{% endif %}>
+  <header class="vcard-head">
+    {% if v.score %}<span class="score s{{ v.score }}">{{ v.score }}/5</span>{% endif %}
+    <a class="vcard-title" href="/vacancies/{{ v.id }}">{{ c.title }}</a>
+    <span class="status-chip">{{ _(c.status_label) }}</span>
+  </header>
+  {% if v.location or v.salary %}<p class="vcard-meta muted">{{ [v.location, v.salary]|select|join(" · ") }}</p>{% endif %}
+  {% if c.running %}
+  <p class="progress muted"><span class="spinner" aria-hidden="true"></span>{{ _(c.label or "Thinking") }}…</p>
+  {% else %}
+  {% if c.summary %}<div class="md vcard-summary">{{ c.summary|markdown }}</div>{% endif %}
+  {% if c.error %}<p class="note err">{{ _(c.error) }}</p>{% endif %}
+  {% if c.documents %}
+  <ul class="docs">
+    {% for label, f in c.documents %}<li><a href="/files/{{ f.id }}">{{ _(label) }}</a></li>{% endfor %}
+  </ul>
+  {% endif %}
+  <div class="vcard-actions">
+    <a href="/vacancies/{{ v.id }}">{{ _("Open") }}</a>
+    {% if v.status in ("assessed", "prepared") %}
+    <form method="post" action="/vacancies/{{ v.id }}/status" class="inline"><input type="hidden" name="status" value="applied"><button class="link" type="submit">{{ _("I applied") }}</button></form>
+    <form method="post" action="/vacancies/{{ v.id }}/status" class="inline"><input type="hidden" name="status" value="not_fit"><button class="link" type="submit">{{ _("Not a fit") }}</button></form>
+    {% endif %}
+    {% if c.story %}<a href="/chats/{{ c.story.id }}">{{ _("Story") }}</a>{% endif %}
+  </div>
+  {% endif %}
+</article>
+{% if finished_now %}{% with oob = true %}{% include "_spend.html" %}{% endwith %}{% endif %}

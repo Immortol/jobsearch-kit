@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ c.title }} · Jobsearch Kit{% endblock %}
+{% block content %}
+{% set v = c.v %}
+<p><a href="/vacancies">← {{ _("All vacancies") }}</a></p>
+{% if repeat %}<p class="note ok">{{ _("This vacancy is already in the feed: here is its card.") }}</p>{% endif %}
+
+<header class="vacancy-head">
+  <h1 class="chat-title">{% if v.score %}<span class="score s{{ v.score }}">{{ v.score }}/5</span> {% endif %}{{ c.title }}</h1>
+  <p class="muted">{{ [v.location, v.salary]|select|join(" · ") }}{% if v.url %}{% if v.location or v.salary %} · {% endif %}<a href="{{ v.url }}" target="_blank" rel="noopener noreferrer">{{ _("The ad") }}</a>{% endif %}</p>
+</header>
+
+<section class="card">
+  {% if c.summary %}<div class="md vcard-summary">{{ c.summary|markdown }}</div>{% endif %}
+  {% if c.running %}<p class="progress muted"><span class="spinner" aria-hidden="true"></span>{{ _(c.label or "Thinking") }}…</p>{% endif %}
+  <form method="post" action="/vacancies/{{ v.id }}/status" class="status-form">
+    <label for="status">{{ _("Status") }}</label>
+    <select id="status" name="status">
+      {% for key, label in statuses %}<option value="{{ key }}"{% if key == v.status %} selected{% endif %}>{{ _(label) }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="secondary">{{ _("Save") }}</button>
+  </form>
+  {% if v.next_step %}<p><strong>{{ _("Next step") }}:</strong> {{ v.next_step }}</p>{% endif %}
+  {% if v.deadline or v.apply_how %}<p class="muted">{{ [v.apply_how, v.deadline]|select|join(" · ") }}</p>{% endif %}
+  <h2>{{ _("Documents") }}</h2>
+  <ul class="docs">
+    {% for label, f in c.documents %}<li><a href="/files/{{ f.id }}">{{ _(label) }}</a></li>{% endfor %}
+    {% if master_cv and master_cv.pdf_id and not c.has_vacancy_cv %}
+    <li><a href="/files/{{ master_cv.pdf_id }}">{{ _("Master CV, PDF") }}</a></li>
+    {% endif %}
+  </ul>
+  {% if not c.documents and not c.running %}<p class="muted">{{ _("No documents for this vacancy yet.") }}</p>{% endif %}
+  <div class="vcard-actions">
+    {% if c.story %}
+    <a class="button" href="/chats/{{ c.story.id }}">{{ _("Open the story") }}</a>
+    {% else %}
+    <form method="post" action="/vacancies/{{ v.id }}/story" class="inline"><button type="submit" class="secondary">{{ _("Start the story") }}</button></form>
+    {% endif %}
+  </div>
+  {% if v.notes %}<details><summary>{{ _("Notes") }}</summary><div class="md">{{ v.notes|markdown }}</div></details>{% endif %}
+  {% if v.description %}<details><summary>{{ _("The ad, in short") }}</summary><div class="md">{{ v.description|markdown }}</div></details>{% endif %}
+</section>
+
+<h2>{{ _("Assessment and questions") }}</h2>
+<div id="thread" class="thread" aria-live="polite">
+  {% for v in messages %}{% include "_message.html" %}{% endfor %}
+  {% set v = c.v %}
+</div>
+<div id="composer-note"></div>
+{% if c.chat and user.api_key %}
+<form method="post" action="/chats/{{ c.chat.id }}/messages" hx-post="/chats/{{ c.chat.id }}/messages"
+      hx-target="#thread" hx-swap="beforeend" hx-encoding="multipart/form-data"
+      enctype="multipart/form-data" class="composer card" data-composer>
+  <label class="sr-only" for="message">{{ _("Message") }}</label>
+  {% with placeholder = _("A question about this vacancy, or: make the documents"), running = c.running %}{% include "_composer_fields.html" %}{% endwith %}
+</form>
+{% endif %}
+
+<form method="post" action="/vacancies/{{ c.v.id }}/delete" class="chat-delete"
+      hx-confirm="{{ _('Delete this vacancy with its documents? The money already spent stays in the counter.') }}"
+      hx-post="/vacancies/{{ c.v.id }}/delete">
+  <button class="link danger" type="submit">{{ _("Delete vacancy") }}</button>
+</form>
+{% endblock %}

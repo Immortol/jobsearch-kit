@@ -29,7 +29,9 @@ def files_page(request: Request, user: User = Depends(require_user),
     cv = latest_cv(db, user)
     current = [by_id[i] for i in ((cv.pdf_id, cv.docx_id) if cv else ()) if i in by_id]
     return render(request, "files.html", user=user, cv=cv, current=current,
-                  generated=[f for f in files if f.kind != "upload" and f not in current],
+                  generated=[f for f in files if f.kind in ("cv_docx", "cv_pdf")
+                             and f not in current],
+                  vacancy_docs=sum(1 for f in files if f.vacancy_id is not None),
                   uploads=[f for f in files if f.kind == "upload"])
 
 

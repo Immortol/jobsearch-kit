@@ -85,3 +85,8 @@
     sync();
   });
 })();
+
+// Tracker: a status change saves at once.
+document.addEventListener("change", function (e) {
+  if (e.target.matches && e.target.matches("select[data-autosubmit]")) e.target.form.submit();
+});

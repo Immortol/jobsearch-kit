@@ -31,6 +31,13 @@
 </section>
 {% endif %}
 
+{% if vacancy_docs %}
+<section class="card">
+  <h2>{{ _("Documents for vacancies") }}</h2>
+  <p>{{ _("Cover letters and adapted CVs are on the card of their vacancy.") }} <a href="/vacancies?f=progress">{{ _("Vacancies in progress") }}</a></p>
+</section>
+{% endif %}
+
 {% if uploads %}
 <section class="card">
   <h2>{{ _("Files you sent") }}</h2>
