@@ -25,11 +25,13 @@
   <h2>{{ _("Documents") }}</h2>
   <ul class="docs">
     {% for label, f in c.documents %}<li><a href="/files/{{ f.id }}">{{ _(label) }}</a></li>{% endfor %}
+    {% if c.has_package %}<li><a class="package-link" href="/vacancies/{{ c.v.id }}/package.zip">📦 {{ _("Download the package as a folder") }}</a></li>{% endif %}
     {% if master_cv and master_cv.pdf_id and not c.has_vacancy_cv %}
     <li><a href="/files/{{ master_cv.pdf_id }}">{{ _("Master CV, PDF") }}</a></li>
     {% endif %}
   </ul>
   {% if not c.documents and not c.running %}<p class="muted">{{ _("No documents for this vacancy yet.") }}</p>{% endif %}
+  {% if c.has_package %}<p class="muted small">{{ _("The folder has the letter, the CV and your files marked \"in every package\" (Documents) — unzip, open, select all, upload.") }}</p>{% endif %}
   <div class="vcard-actions">
     {% if c.story %}
     <a class="button" href="/chats/{{ c.story.id }}">{{ _("Open the story") }}</a>

@@ -190,6 +190,8 @@ class UserFile(Base):
     size: Mapped[int]
     data: Mapped[bytes] = mapped_column(LargeBinary, deferred=True)
     text: Mapped[str | None] = mapped_column(Text, deferred=True)  # extracted text of uploads
+    # An upload that goes into every application package (certificates, diplomas).
+    in_package: Mapped[bool] = mapped_column(default=False, server_default="false")
     # Documents of a vacancy's package (letter, adapted CV), decision 0011.
     vacancy_id: Mapped[int | None] = mapped_column(
         ForeignKey("vacancies.id", ondelete="SET NULL", name="fk_user_files_vacancy_id"),

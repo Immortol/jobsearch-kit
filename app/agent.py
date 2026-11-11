@@ -330,8 +330,11 @@ In this environment:
 that this exact link is not in the feed; still check company + role with `find_vacancy`. Call \
 `vacancy_update` as soon as you know company and role, and at the end with score, status, summary, \
 description and the rest.
-- The package folder (step 6) = the card: documents you make are attached to it. The ad file = \
-`description` in `vacancy_update`.
+- The package folder (step 6) = the card: documents you make are attached to it, and the person \
+downloads them as one folder with the letter PDF, the CV PDF (adapted, otherwise the master CV) \
+and their own files marked "in every package" (listed below). The ad file = `description` in \
+`vacancy_update`. If the employer asks for a document that is not in the package (a reference, a \
+diploma), say which one the person should add in Documents.
 - The letter PDF (make_letter.py + render.mjs + check_pdf.py) = `make_letter` with the same JSON.
 - The adapted CV = `save_vacancy_cv`; the master CV is read with `read_cv` and is linked on the card.
 - The Gmail draft (step 8) is not available yet: if the application goes by email, put the short \
@@ -386,7 +389,9 @@ def system_for(kind: str, db: Session, user: User, vacancy: Vacancy | None,
     if kind == "card":
         skill = skills.load_skill("jobsearch-vacancy")
         static = f"{ADAPTER}\n{CARD_ADAPTER}\n## The jobsearch-vacancy skill\n{skill.body}"
-        facts = f"Today is {today.isoformat()}."
+        attachments = ", ".join(f.filename for f in files.package_attachments(db, user)) or "none"
+        facts = (f"Today is {today.isoformat()}.\n"
+                 f"The person's files that go into every package: {attachments}.")
         if vacancy is not None:
             facts += "\n" + vacancy_block(db, vacancy)
         return [

@@ -15,7 +15,7 @@ from app.claude import ClaudeClient, get_claude_client
 from app.db import get_db
 from app.models import VACANCY_STATUSES, User, Vacancy
 from app.routes.chat import _message_view
-from app.routes.files import latest_cv
+from app.files import latest_cv
 from app.web import render
 
 router = APIRouter()
@@ -85,6 +85,7 @@ def card_view(db: Session, v: Vacancy) -> dict:
         last.status == "error" else None,
         "documents": [(DOCUMENT_LABELS[k], docs[k]) for k in DOCUMENT_LABELS if k in docs],
         "has_vacancy_cv": "vcv_pdf" in docs or "vcv_docx" in docs,
+        "has_package": "letter_pdf" in docs or "vcv_pdf" in docs,
         "story": vac.story_chat(db, v),
     }
 
@@ -160,6 +161,17 @@ def _back(request: Request, fallback: str) -> str:
         if target.startswith(prefix):
             return "/" + target[len(prefix):]
     return fallback
+
+
+@router.get("/vacancies/{vacancy_id}/package.zip")
+def package(vacancy_id: int, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    v = vac.get_vacancy(db, user, vacancy_id)
+    if v is None or not vac.package_files(db, user, v):
+        return Response("Not found", status_code=404)
+    name, data = vac.build_package(db, user, v)
+    return Response(data, media_type="application/zip",
+                    headers={"Content-Disposition": f'attachment; filename="{name}"',
+                             "Cache-Control": "no-store"})
 
 
 @router.post("/vacancies/{vacancy_id}/status")

@@ -16,6 +16,7 @@
   {% if c.documents %}
   <ul class="docs">
     {% for label, f in c.documents %}<li><a href="/files/{{ f.id }}">{{ _(label) }}</a></li>{% endfor %}
+    {% if c.has_package %}<li><a class="package-link" href="/vacancies/{{ c.v.id }}/package.zip">📦 {{ _("Download the package as a folder") }}</a></li>{% endif %}
   </ul>
   {% endif %}
   <div class="vcard-actions">

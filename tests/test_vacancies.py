@@ -227,3 +227,47 @@ def test_export_includes_vacancies(client, outbox, fake, db):
     client.post("/vacancies", data={"text": "https://jobs.example/acme"})
     data = client.get("/account/export").json()
     assert data["vacancies"][0]["company"] == "Acme" and data["vacancies"][0]["score"] == 4
+
+
+@NEEDS_SOFFICE
+def test_package_folder_has_letter_cv_and_attachments(client, outbox, fake, db):
+    import io
+    import zipfile
+    signed_in(client, outbox)
+    r = client.post("/files", data={"in_package": "1"},
+                    files={"file": ("Zeugnis.pdf", b"%PDF-1.4 zeugnis", "application/pdf")},
+                    follow_redirects=False)
+    assert r.status_code == 303
+    client.post("/files", files={"file": ("private.pdf", b"%PDF-1.4 x", "application/pdf")})
+    assert client.post("/files", files={"file": ("x.exe", b"MZ", "x")},
+                       follow_redirects=False).headers["location"] == "/files?error=type"
+    assert "✓ в каждый пакет" in client.get("/files").text
+
+    fake.queue(tool_call(("m", "save_cv", SAMPLE_CV)), reply("мастер"))
+    client.post("/chats", data={"message": "резюме"})
+    fake.queue(assessed("Acme GmbH", "IT-Projektleiter", 5, "prepared", "5/5"),
+               tool_call(("l1", "make_letter", LETTER)), reply("Пакет готов"))
+    client.post("/vacancies", data={"text": "https://jobs.example/acme"})
+    assert "Zeugnis.pdf" in fake.requests[-1]["system"][-1]["text"]
+    v = db.scalar(select(Vacancy))
+    assert "Скачать пакет папкой" in client.get("/vacancies").text
+
+    r = client.get(f"/vacancies/{v.id}/package.zip")
+    assert r.headers["content-type"] == "application/zip"
+    assert 'filename="Acme_GmbH_IT-Projektleiter.zip"' in r.headers["content-disposition"]
+    names = sorted(zipfile.ZipFile(io.BytesIO(r.content)).namelist())
+    assert names == ["Acme_GmbH_IT-Projektleiter/CV_Muller_Projektmanagerin_de.pdf",
+                     "Acme_GmbH_IT-Projektleiter/Muller_Letter.pdf",
+                     "Acme_GmbH_IT-Projektleiter/Zeugnis.pdf"]
+
+
+def test_package_needs_documents_and_owner(client, outbox, fake, db):
+    invite(client, outbox, "friend@example.com")
+    signed_in(client, outbox)
+    fake.queue(reply("2/5"))
+    client.post("/vacancies", data={"text": "https://jobs.example/x"})
+    v = db.scalar(select(Vacancy))
+    assert client.get(f"/vacancies/{v.id}/package.zip").status_code == 404
+    client.post("/logout")
+    signed_in(client, outbox, "friend@example.com")
+    assert client.get(f"/vacancies/{v.id}/package.zip").status_code == 404

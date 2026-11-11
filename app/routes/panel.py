@@ -9,7 +9,7 @@ from app.auth import optional_user, require_user
 from app.db import get_db
 from app.intake import get_questionnaire
 from app.models import ApiKey, User, utcnow
-from app.routes.files import latest_cv
+from app.files import latest_cv
 from app.rules import list_rules
 from app.vacancies import list_vacancies
 from app.security import encrypt_secret

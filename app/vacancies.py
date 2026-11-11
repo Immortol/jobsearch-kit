@@ -1,12 +1,16 @@
 """Vacancies: the feed of cards, the tracker and vacancy stories (decision 0011)."""
 
+import io
 import re
+import zipfile
 from dataclasses import dataclass
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
+from app.cv import file_base
+from app.files import latest_cv, package_attachments
 from app.i18n import gettext
 from app.models import (
     STORY_STATUSES, VACANCY_STATUSES, Chat, ChatMessage, UserFile, User, Vacancy, utcnow,
@@ -195,3 +199,43 @@ def find_similar(db: Session, user: User, query: str, exclude_id: int | None) ->
         stmt = stmt.where(or_(Vacancy.company.ilike(like), Vacancy.role.ilike(like),
                               Vacancy.url.ilike(like)))
     return list(db.scalars(stmt.order_by(Vacancy.id.desc()).limit(10)))
+
+
+# --- the application package as a folder (decision 0011, addendum) ---------------------------
+
+def package_files(db: Session, user: User, v: Vacancy) -> list[UserFile]:
+    """What goes into the folder the person uploads: the letter, the CV (adapted, or the master
+    CV), and the attachments marked "goes into every package". PDFs only for generated files —
+    the Word versions are for editing and stay on the card."""
+    docs = latest_documents(db, v)
+    out = [docs[k] for k in ("letter_pdf",) if k in docs]
+    if "vcv_pdf" in docs:
+        out.append(docs["vcv_pdf"])
+    else:
+        cv = latest_cv(db, user)
+        if cv is not None and cv.pdf_id:
+            master = db.get(UserFile, cv.pdf_id)
+            if master is not None:
+                out.append(master)
+    return out + package_attachments(db, user)
+
+
+def package_name(v: Vacancy) -> str:
+    return file_base({"file_name": display_title(v).replace(" · ", "_")}) or f"Vacancy_{v.id}"
+
+
+def build_package(db: Session, user: User, v: Vacancy) -> tuple[str, bytes]:
+    """A ZIP with one folder named after the vacancy; unzip, open, select all, upload."""
+    folder = package_name(v)
+    out = io.BytesIO()
+    used: set[str] = set()
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+        for f in package_files(db, user, v):
+            name, n = f.filename, 2
+            while name.lower() in used:
+                stem, dot, ext = f.filename.rpartition(".")
+                name = f"{stem} ({n}).{ext}" if dot else f"{f.filename} ({n})"
+                n += 1
+            used.add(name.lower())
+            z.writestr(f"{folder}/{name}", f.data)
+    return f"{folder}.zip", out.getvalue()

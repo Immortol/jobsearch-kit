@@ -38,15 +38,32 @@
 </section>
 {% endif %}
 
-{% if uploads %}
-<section class="card">
-  <h2>{{ _("Files you sent") }}</h2>
-  <ul class="files">
+<section class="card" id="attachments">
+  <h2>{{ _("Your files and package attachments") }}</h2>
+  <p class="muted">{{ _("Certificates, diplomas, references: upload them once and mark \"in every package\" — they are added to the folder of each vacancy.") }}</p>
+  {% if error %}{% with error = "file_" ~ error %}{% include "_composer_error.html" %}{% endwith %}{% endif %}
+  {% if uploads %}
+  <ul class="files attachments">
     {% for f in uploads %}
-    <li><a href="/files/{{ f.id }}">{{ f.filename }}</a>
-      <span class="muted">{{ f.created_at.strftime("%Y-%m-%d %H:%M") }} UTC</span></li>
+    <li>
+      <a href="/files/{{ f.id }}">{{ f.filename }}</a>
+      <form method="post" action="/files/{{ f.id }}/package" class="inline">
+        <input type="hidden" name="in_package" value="{{ '' if f.in_package else '1' }}">
+        <button type="submit" class="link{% if f.in_package %} on{% endif %}">{{ "✓ " if f.in_package }}{{ _("in every package") }}</button>
+      </form>
+      <form method="post" action="/files/{{ f.id }}/delete" class="inline"
+            hx-confirm="{{ _('Delete this file?') }}" hx-post="/files/{{ f.id }}/delete">
+        <button type="submit" class="link danger">{{ _("Delete") }}</button>
+      </form>
+    </li>
     {% endfor %}
   </ul>
+  {% endif %}
+  <form method="post" action="/files" enctype="multipart/form-data" class="upload-form">
+    <label class="attach"><input type="file" name="file" accept=".pdf,.docx,.jpg,.jpeg,.png" data-attach required>
+      <span aria-hidden="true">📎</span><span class="attach-name" data-attach-name>{{ _("Choose a file: PDF, Word, JPG, PNG, up to 5 MB") }}</span></label>
+    <label class="check"><input type="checkbox" name="in_package" value="1" checked> {{ _("in every package") }}</label>
+    <button type="submit">{{ _("Upload") }}</button>
+  </form>
 </section>
-{% endif %}
 {% endblock %}
