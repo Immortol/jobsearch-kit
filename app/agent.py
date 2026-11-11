@@ -14,9 +14,10 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app import cv, files, letter, rules, skills, vacancies
+from app import cv, files, google_sync, letter, rules, skills, vacancies
 from app.intake import set_document
 from app.claude import ClaudeClient, ClaudeError, ClaudeFailure
+from app.google import GoogleError
 from app.models import (
     VACANCY_STATUSES, Chat, CvVersion, Questionnaire, User, UserFile, Vacancy, utcnow,
 )
@@ -262,6 +263,25 @@ VACANCY_TOOLS: list[dict] = [
         },
     },
     {
+        "name": "gmail_draft",
+        "description": "Create a draft in the person's Gmail for applying to this vacancy by "
+                       "email, with the package attached (letter PDF, CV PDF, their files "
+                       "marked 'in every package'). It is never sent; the person checks it and "
+                       "presses Send. Works only when Google is connected in the panel.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "to": {"type": "string", "description": "Recipient address from the ad; empty "
+                                                        "if unknown"},
+                "subject": {"type": "string"},
+                "body": {"type": "string", "description": "The short email text (step 8), "
+                                                          "plain text"},
+                "attach_package": {"type": "boolean", "default": True},
+            },
+            "required": ["subject", "body"],
+        },
+    },
+    {
         "name": "find_vacancy",
         "description": "Search the person's earlier vacancies (feed and tracker) by company, "
                        "role or link — step 1 of the skill.",
@@ -302,6 +322,7 @@ TOOL_STATUS = {
     "vacancy_update": _("Updating the tracker"),
     "find_vacancy": _("Checking earlier vacancies"),
     "make_letter": _("Writing the cover letter"),
+    "gmail_draft": _("Creating a draft in Gmail"),
     "save_vacancy_cv": _("Adapting the CV"),
 }
 STATUS_THINKING = _("Thinking")
@@ -337,8 +358,9 @@ and their own files marked "in every package" (listed below). The ad file = `des
 diploma), say which one the person should add in Documents.
 - The letter PDF (make_letter.py + render.mjs + check_pdf.py) = `make_letter` with the same JSON.
 - The adapted CV = `save_vacancy_cv`; the master CV is read with `read_cv` and is linked on the card.
-- The Gmail draft (step 8) is not available yet: if the application goes by email, put the short \
-email text at the end of your message under a heading.
+- The Gmail draft (step 8) = `gmail_draft`; the package is attached automatically. If Google is \
+not connected (see below), put the short email text at the end of your message under a heading \
+and say in one line that connecting Google in the panel's settings makes drafts appear in Gmail.
 - The final message is shown on the card: the skill's 3–5 lines, then one line per document, then \
 how and until when to apply. Do not mention folders.
 - Documents for 4–5 are made right away, as the skill says. For 3 and below, offer \
@@ -390,8 +412,10 @@ def system_for(kind: str, db: Session, user: User, vacancy: Vacancy | None,
         skill = skills.load_skill("jobsearch-vacancy")
         static = f"{ADAPTER}\n{CARD_ADAPTER}\n## The jobsearch-vacancy skill\n{skill.body}"
         attachments = ", ".join(f.filename for f in files.package_attachments(db, user)) or "none"
+        google = ("connected" if google_sync.account(db, user) is not None else "not connected")
         facts = (f"Today is {today.isoformat()}.\n"
-                 f"The person's files that go into every package: {attachments}.")
+                 f"The person's files that go into every package: {attachments}.\n"
+                 f"Google (Gmail drafts, Drive folder): {google}.")
         if vacancy is not None:
             facts += "\n" + vacancy_block(db, vacancy)
         return [
@@ -633,6 +657,25 @@ def _tool_vacancy_update(ctx: ToolContext, args: dict) -> str:
     return "Saved." + note
 
 
+def _tool_gmail_draft(ctx: ToolContext, args: dict) -> str:
+    v = _current_vacancy(ctx)
+    if google_sync.account(ctx.db, ctx.user) is None:
+        raise ToolFailed("Google is not connected in the panel. Put the email text in your "
+                         "message instead.")
+    subject = " ".join(str(args.get("subject", "")).split())[:300]
+    body = str(args.get("body", "")).strip()[:20_000]
+    to = " ".join(str(args.get("to") or "").split())[:300]
+    if not subject or not body:
+        raise ToolFailed("A draft needs a subject and a body.")
+    try:
+        url = google_sync.create_draft(ctx.db, ctx.user, v, to, subject, body,
+                                       attach=args.get("attach_package", True) is not False)
+    except GoogleError as exc:
+        raise ToolFailed("Gmail refused the draft" + (": access was withdrawn, the person "
+                         "must reconnect Google" if exc.revoked else ".")) from None
+    return f"Draft created in Gmail (not sent): {url}"
+
+
 def _tool_find_vacancy(ctx: ToolContext, args: dict) -> str:
     query = str(args.get("query", ""))
     found = vacancies.find_similar(ctx.db, ctx.user, query, ctx.vacancy_id)
@@ -703,6 +746,7 @@ LOCAL_TOOLS: dict[str, Callable[[ToolContext, dict], str]] = {
     "set_chat_title": _tool_set_chat_title,
     "vacancy_update": _tool_vacancy_update,
     "find_vacancy": _tool_find_vacancy,
+    "gmail_draft": _tool_gmail_draft,
     "make_letter": _tool_make_letter,
     "save_vacancy_cv": _tool_save_vacancy_cv,
     "questionnaire_prefill": _tool_questionnaire_prefill,

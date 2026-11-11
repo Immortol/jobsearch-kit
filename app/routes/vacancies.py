@@ -9,6 +9,7 @@ from fastapi.responses import RedirectResponse, Response
 from sqlalchemy.orm import Session
 
 from app import chat as chats
+from app import google_sync
 from app import vacancies as vac
 from app.auth import require_user
 from app.claude import ClaudeClient, get_claude_client
@@ -147,6 +148,7 @@ def card_page(request: Request, vacancy_id: int, repeat: int = 0,
     view = card_view(db, v)
     messages = view["chat"].messages if view["chat"] is not None else []
     return render(request, "vacancy.html", user=user, c=view, repeat=repeat,
+                  google=google_sync.account(db, user),
                   messages=[_message_view(m, i == len(messages) - 1)
                             for i, m in enumerate(messages)],
                   statuses=[(s, STATUS_LABELS[s]) for s in VACANCY_STATUSES if s != "new"],
@@ -174,6 +176,16 @@ def package(vacancy_id: int, user: User = Depends(require_user), db: Session = D
                              "Cache-Control": "no-store"})
 
 
+@router.post("/vacancies/{vacancy_id}/drive")
+def drive_folder(vacancy_id: int, user: User = Depends(require_user),
+                 db: Session = Depends(get_db)):
+    v = vac.get_vacancy(db, user, vacancy_id)
+    if v is None:
+        return Response(status_code=404)
+    google_sync.sync_package(db, user, v)
+    return RedirectResponse(f"/vacancies/{v.id}", status_code=303)
+
+
 @router.post("/vacancies/{vacancy_id}/status")
 def change_status(request: Request, vacancy_id: int, status: str = Form(...),
                   user: User = Depends(require_user), db: Session = Depends(get_db)):
@@ -182,6 +194,7 @@ def change_status(request: Request, vacancy_id: int, status: str = Form(...),
         return Response(status_code=404)
     story = vac.set_status(db, user, v, status)
     db.flush()
+    google_sync.tracker_changed(db, user)
     if story is not None:
         return RedirectResponse(f"/chats/{story.id}", status_code=303)
     return RedirectResponse(_back(request, f"/vacancies/{v.id}"), status_code=303)
@@ -204,6 +217,7 @@ def delete(vacancy_id: int, user: User = Depends(require_user), db: Session = De
             db.delete(f)
         db.delete(v)
         db.flush()
+        google_sync.tracker_changed(db, user)
     return RedirectResponse("/vacancies", status_code=303)
 
 

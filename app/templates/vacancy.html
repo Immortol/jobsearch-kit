@@ -31,6 +31,13 @@
     {% endif %}
   </ul>
   {% if not c.documents and not c.running %}<p class="muted">{{ _("No documents for this vacancy yet.") }}</p>{% endif %}
+  {% if v.draft_url %}<p><a href="{{ v.draft_url }}" target="_blank" rel="noopener noreferrer">✉️ {{ _("Draft in Gmail") }}</a></p>{% endif %}
+  {% if google and c.has_package %}
+  <div class="vcard-actions">
+    {% if v.drive_folder_id %}<a href="https://drive.google.com/drive/folders/{{ v.drive_folder_id }}" target="_blank" rel="noopener noreferrer">📁 {{ _("Folder in Google Drive") }}</a>{% endif %}
+    <form method="post" action="/vacancies/{{ v.id }}/drive" class="inline"><button type="submit" class="link">{{ _("Update the folder in Drive") if v.drive_folder_id else _("Put the package into Google Drive") }}</button></form>
+  </div>
+  {% endif %}
   {% if c.has_package %}<p class="muted small">{{ _("The folder has the letter, the CV and your files marked \"in every package\" (Documents) — unzip, open, select all, upload.") }}</p>{% endif %}
   <div class="vcard-actions">
     {% if c.story %}

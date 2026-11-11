@@ -14,7 +14,7 @@ from app.auth import NotAuthenticated, NotOwner
 from app.config import get_settings
 from app.db import get_engine
 from app.routes import (
-    account, admin, chat, files, login, panel, questionnaire, rules, vacancies,
+    account, admin, chat, files, google, login, panel, questionnaire, rules, vacancies,
 )
 from app.web import is_htmx, render
 
@@ -29,7 +29,8 @@ def create_app() -> FastAPI:
     app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")),
               name="static")
     for r in (login.router, panel.router, vacancies.router, chat.router, chat.setup_router,
-              questionnaire.router, files.router, rules.router, account.router, admin.router):
+              questionnaire.router, files.router, google.router, rules.router, account.router,
+              admin.router):
         app.include_router(r)
 
     @app.middleware("http")

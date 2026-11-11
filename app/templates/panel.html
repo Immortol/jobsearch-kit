@@ -59,8 +59,18 @@
   </section>
 </div>
 
+<section class="card">
+  <h2>Google</h2>
+  {% if google %}
+  <p><span class="dot ok"></span>{{ _("Connected: {email}", email=google.email or "Google") }}</p>
+  {% else %}
+  <p>{{ _("Drafts with the package in your Gmail, a folder per vacancy and the tracker in your Google Drive.") }}</p>
+  {% endif %}
+  <a href="/settings/google">{{ _("Settings") if google else _("Connect Google") }}</a>
+</section>
+
 <section class="card empty">
   <h2>{{ _("Coming next") }}</h2>
-  <p class="muted">{{ _("Drafts in your Gmail and the night scanner of new vacancies will appear here step by step.") }}</p>
+  <p class="muted">{{ _("The night scanner of new vacancies and the morning digest will appear here.") }}</p>
 </section>
 {% endblock %}

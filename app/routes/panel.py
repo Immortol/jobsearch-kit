@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.anthropic_keys import KeyCheck, KeyChecker, get_key_checker, looks_like_api_key
 from app.auth import optional_user, require_user
+from app import google_sync
 from app.db import get_db
 from app.intake import get_questionnaire
 from app.models import ApiKey, User, utcnow
@@ -31,7 +32,8 @@ def panel(request: Request, user: User = Depends(require_user), db: Session = De
                   setup_started=any(r.name == "00_Setup_Status.md" for r in rules),
                   has_questionnaire=questionnaire is not None and questionnaire.prefill is not None,
                   cv=latest_cv(db, user),
-                  in_progress=len(list_vacancies(db, user, flt="progress", limit=1000)))
+                  in_progress=len(list_vacancies(db, user, flt="progress", limit=1000)),
+                  google=google_sync.account(db, user))
 
 
 def _key_page(request: Request, user: User, status: str | None = None, status_code: int = 200):

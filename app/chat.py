@@ -18,6 +18,7 @@ from functools import lru_cache
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app import google_sync
 from app.agent import Progress, build_history, run_reply
 from app.claude import ClaudeClient, ClaudeFailure
 from app.config import get_settings
@@ -191,6 +192,10 @@ def _run(message_id: int, client: ClaudeClient, live: LiveReply) -> None:
         if chat.kind == "card" and chat.vacancy_id and result.error is None:
             _settle_card(db, chat, reply)
         db.commit()
+        if chat.vacancy_id and google_sync.account(db, user) is not None:
+            # Google Drive folder and tracker sheet follow the card (decision 0012).
+            google_sync.package_changed(user.id, chat.vacancy_id)
+            google_sync.tracker_changed(db, user)
 
 
 def _settle_card(db: Session, chat: Chat, reply: ChatMessage) -> None:

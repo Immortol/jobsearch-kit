@@ -267,3 +267,23 @@ class Vacancy(Base):
     deadline: Mapped[str] = mapped_column(String(100), default="")
     next_step: Mapped[str] = mapped_column(String(300), default="")
     notes: Mapped[str] = mapped_column(Text, default="")
+    drive_folder_id: Mapped[str | None] = mapped_column(String(200))  # decision 0012
+    draft_url: Mapped[str | None] = mapped_column(String(500))
+
+
+class GoogleAccount(Base):
+    """The person's Google connection (decisions 0008, 0012). Token encrypted like the API key."""
+
+    __tablename__ = "google_accounts"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"),
+                                         primary_key=True)
+    email: Mapped[str] = mapped_column(String(320), default="")
+    encrypted_refresh_token: Mapped[bytes] = mapped_column(LargeBinary)
+    scopes: Mapped[str] = mapped_column(Text, default="")
+    connected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    root_folder_id: Mapped[str | None] = mapped_column(String(200))
+    applications_folder_id: Mapped[str | None] = mapped_column(String(200))
+    sheet_id: Mapped[str | None] = mapped_column(String(200))
+    synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_error: Mapped[str | None] = mapped_column(String(300))
