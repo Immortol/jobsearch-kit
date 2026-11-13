@@ -2,14 +2,14 @@
 {% block title %}{{ _("My chats") }} · Jobsearch Kit{% endblock %}
 {% block content %}
 <h1>{{ _("My chats") }}</h1>
-<p class="muted">{{ _("Send a link to a vacancy or its text: the assistant opens it and assesses it against your rules.") }}</p>
+<p class="muted">{{ _("Setup meetings, vacancy stories and any other questions. Vacancies themselves go to the feed:") }} <a href="/vacancies">{{ _("Vacancies") }}</a>.</p>
 
 <section class="card">
   {% if error %}{% include "_composer_error.html" %}{% endif %}
   {% if user.api_key %}
   <form method="post" action="/chats" enctype="multipart/form-data" class="composer" data-composer>
     <label for="message">{{ _("New chat") }}</label>
-    {% with placeholder = _("Here is a vacancy: https://…"), running = false %}{% include "_composer_fields.html" %}{% endwith %}
+    {% with placeholder = _("Write a question…"), running = false %}{% include "_composer_fields.html" %}{% endwith %}
   </form>
   {% else %}
   {% include "_no_key.html" %}

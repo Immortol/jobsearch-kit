@@ -29,9 +29,16 @@
 </section>
 
 <section class="card">
+  <h2>{{ _("Vacancies") }}</h2>
+  <p>{{ _("Paste links to vacancies: each one gets an assessment against your rules, and a 4–5 gets a cover letter and CV.") }}</p>
+  <a class="button" href="/vacancies">{{ _("Open vacancies") }}</a>
+  {% if in_progress %}<a class="tracker-link" href="/tracker">{{ _("In the tracker: {n}", n=in_progress) }}</a>{% endif %}
+</section>
+
+<section class="card">
   <h2>{{ _("My chats") }}</h2>
-  <p>{{ _("Send a link to a vacancy or its text: the assistant opens it and assesses it against your rules.") }}</p>
-  <a class="button" href="/chats">{{ _("Open my chats") }}</a>
+  <p>{{ _("Setup meetings, vacancy stories and any other questions.") }}</p>
+  <a href="/chats">{{ _("Open my chats") }}</a>
 </section>
 
 <div class="grid">
@@ -52,8 +59,18 @@
   </section>
 </div>
 
+<section class="card">
+  <h2>Google</h2>
+  {% if google %}
+  <p><span class="dot ok"></span>{{ _("Connected: {email}", email=google.email or "Google") }}</p>
+  {% else %}
+  <p>{{ _("Drafts with the package in your Gmail, a folder per vacancy and the tracker in your Google Drive.") }}</p>
+  {% endif %}
+  <a href="/settings/google">{{ _("Settings") if google else _("Connect Google") }}</a>
+</section>
+
 <section class="card empty">
   <h2>{{ _("Coming next") }}</h2>
-  <p class="muted">{{ _("Application packages, Gmail drafts and the tracker will appear here step by step.") }}</p>
+  <p class="muted">{{ _("The night scanner of new vacancies and the morning digest will appear here.") }}</p>
 </section>
 {% endblock %}

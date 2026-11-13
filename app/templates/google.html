@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Google · Jobsearch Kit{% endblock %}
+{% block content %}
+<h1>{{ _("Google: Gmail and Drive") }}</h1>
+
+{% if connected %}<p class="note ok">{{ _("Google is connected.") }}</p>{% endif %}
+{% if error %}
+<p class="note err">
+  {% if error == "cancelled" %}{{ _("Connection cancelled on Google's page.") }}
+  {% elif error == "scopes" %}{{ _("Google needs both ticks — Gmail drafts and Drive files — for the panel to work. Connect again and leave both on.") }}
+  {% else %}{{ _("Could not connect Google. Try again; if it repeats, tell Alexander.") }}{% endif %}
+</p>
+{% endif %}
+
+{% if acc %}
+<section class="card">
+  <p><span class="dot ok"></span>{{ _("Connected: {email}", email=acc.email or "Google") }}</p>
+  <ul class="links">
+    {% if folder_url %}<li><a href="{{ folder_url }}" target="_blank" rel="noopener noreferrer">{{ _("Jobsearch folder in Drive") }}</a></li>{% endif %}
+    {% if sheet_url %}<li><a href="{{ sheet_url }}" target="_blank" rel="noopener noreferrer">{{ _("Tracker in Google Sheets") }}</a></li>{% endif %}
+  </ul>
+  {% if acc.last_error == "revoked" %}<p class="note err">{{ _("Google withdrew the panel's access. Disconnect and connect again.") }}</p>
+  {% elif acc.last_error %}<p class="note warn">{{ _("The last update in Google failed. It will be retried with the next change.") }}</p>{% endif %}
+  {% if acc.synced_at %}<p class="muted small">{{ _("Tracker updated: {date} UTC", date=acc.synced_at.strftime("%Y-%m-%d %H:%M")) }}</p>{% endif %}
+  <div class="vcard-actions">
+    <form method="post" action="/google/sync" class="inline"><button type="submit" class="secondary">{{ _("Update the tracker now") }}</button></form>
+    <form method="post" action="/google/disconnect" class="inline" hx-confirm="{{ _('Disconnect Google? Drafts, folders and the sheet already made stay in your account.') }}" hx-post="/google/disconnect"><button type="submit" class="link danger">{{ _("Disconnect") }}</button></form>
+  </div>
+</section>
+{% else %}
+<section class="card">
+  <p>{{ _("With Google connected the panel:") }}</p>
+  <ul>
+    <li>{{ _("puts a draft with the package attached into your Gmail — you check it and press Send;") }}</li>
+    <li>{{ _("keeps a folder per vacancy in your Google Drive: Jobsearch → Applications;") }}</li>
+    <li>{{ _("keeps the tracker as a Google spreadsheet.") }}</li>
+  </ul>
+  <p class="muted">{{ _("The panel can only create drafts — it cannot send anything — and sees only the files it created in Drive. It does not read your mail.") }}</p>
+  <p class="muted">{{ _("Google will warn that the app is not verified: it is a private app for a few people. Press \"Advanced\" → \"Go to jobsearch.almoti.com\", then allow both ticks.") }}</p>
+  {% if available %}
+  <a class="button" href="/google/connect">{{ _("Connect Google") }}</a>
+  {% else %}
+  <p class="note warn">{{ _("Google connection is not set up on the server yet.") }}</p>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

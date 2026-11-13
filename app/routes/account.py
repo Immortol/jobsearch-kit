@@ -15,6 +15,7 @@ from app.files import list_files
 from app.intake import get_questionnaire
 from app.models import CvVersion, User, utcnow
 from app.rules import list_rules
+from app.vacancies import list_vacancies
 from app.web import render
 
 router = APIRouter(prefix="/account")
@@ -53,6 +54,13 @@ def export_data(db: Session, user: User) -> dict:
             {"created_at": v.created_at.isoformat(), "content": v.content}
             for v in db.scalars(select(CvVersion).where(CvVersion.user_id == user.id)
                                 .order_by(CvVersion.id))
+        ],
+        "vacancies": [
+            {"created_at": v.created_at.isoformat(), "link": v.url, "company": v.company,
+             "role": v.role, "location": v.location, "salary": v.salary, "score": v.score,
+             "status": v.status, "summary": v.summary, "description": v.description,
+             "next_step": v.next_step, "notes": v.notes}
+            for v in list_vacancies(db, user, flt="all", limit=100_000)
         ],
         "files": [
             {"name": f.filename, "kind": f.kind, "size": f.size,
