@@ -202,3 +202,5 @@ button.link.on { color: var(--ok); font-weight: 600; }
 .upload-form { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-top: 14px; }
 .check { display: inline-flex; gap: 6px; align-items: center; }
 .package-link { font-weight: 600; }
+.cv-actions { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
+.cv-actions .upload-form { margin-top: 0; }

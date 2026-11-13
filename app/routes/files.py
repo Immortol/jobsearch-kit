@@ -6,12 +6,18 @@ from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
 from fastapi.responses import RedirectResponse, Response
 from sqlalchemy.orm import Session
 
+from app import chat as chats
+from app import cv
 from app.auth import require_user
+from app.claude import ClaudeClient, get_claude_client
 from app.db import get_db
 from app.files import (
+    DOCX, PDF,
     MAX_UPLOAD_BYTES, UploadError, get_file, latest_cv, list_files, read_upload, save_file,
 )
-from app.models import User
+from app.i18n import gettext as _
+from app.models import CvVersion, User
+from app.routes.chat import _start_chat
 from app.web import render
 
 router = APIRouter(prefix="/files")
@@ -50,6 +56,50 @@ async def upload(request: Request, file: list[UploadFile] = File(...),
                       content_type=content_type, data=data, text=text)
         f.in_package = bool(in_package)
     return RedirectResponse("/files#attachments", status_code=303)
+
+
+@router.post("/cv")
+async def upload_cv(file: UploadFile = File(...), user: User = Depends(require_user),
+                    db: Session = Depends(get_db)):
+    """The person's own file becomes the master CV as it is (PDF, or Word converted to PDF)."""
+    data = await file.read(MAX_UPLOAD_BYTES + 1)
+    name = file.filename or "CV"
+    try:
+        content_type, text = read_upload(name, data)
+        if content_type not in (PDF, DOCX):
+            raise UploadError("type")
+        if content_type == PDF:
+            text = cv.pdf_text(data)
+            if not text.strip():
+                raise UploadError("scan")  # a scanned CV: recruiting systems cannot read it
+            pdf, docx_file = data, None
+        else:
+            docx_file = save_file(db, user, kind="cv_docx", filename=name,
+                                  content_type=DOCX, data=data)
+            pdf = cv.docx_to_pdf(data)
+    except UploadError as exc:
+        db.rollback()
+        return RedirectResponse(f"/files?error={exc.code}", status_code=303)
+    except cv.CvError:
+        db.rollback()
+        return RedirectResponse("/files?error=broken", status_code=303)
+    pdf_name = name.rsplit(".", 1)[0] + ".pdf"
+    pdf_file = save_file(db, user, kind="cv_pdf", filename=pdf_name, content_type=PDF, data=pdf)
+    db.add(CvVersion(
+        user_id=user.id, pages=cv.pdf_pages(pdf), pdf_id=pdf_file.id,
+        docx_id=docx_file.id if docx_file is not None else None,
+        content={"uploaded": True, "file_name": name, "text": (text or "")[:60_000]}))
+    return RedirectResponse("/files", status_code=303)
+
+
+@router.post("/cv/edit")
+def edit_cv(user: User = Depends(require_user), db: Session = Depends(get_db),
+            client: ClaudeClient = Depends(get_claude_client),
+            runner: chats.Runner = Depends(chats.get_runner)):
+    """Opens a chat about changing the master CV."""
+    if user.api_key is None:
+        return RedirectResponse("/settings/key", status_code=303)
+    return _start_chat(db, user, _("I want to change my master CV"), None, client, runner)
 
 
 @router.post("/{file_id}/package")
