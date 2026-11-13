@@ -141,7 +141,7 @@ def test_write_rules_logs_changes(db, user):
 
 
 def test_unknown_tool_and_skill_are_errors(db, user):
-    fake = FakeClaude(tool_call(("t1", "load_skill", {"name": "jobsearch-setup"}),
+    fake = FakeClaude(tool_call(("t1", "load_skill", {"name": "jobsearch-scanner"}),
                                 ("t2", "rm_rf", {})), reply("ок"))
     run(db, user, fake)
     results = fake.requests[1]["messages"][-1]["content"]
@@ -173,8 +173,8 @@ def test_call_cost():
 
 def test_skills_catalog_and_files():
     names = [s.name for s in skills.catalog()]
-    assert names == ["jobsearch-vacancy"]
-    assert skills.load_skill("jobsearch-setup") is None
+    assert names == ["jobsearch-setup", "jobsearch-vacancy"]
+    assert skills.load_skill("jobsearch-scanner") is None
     assert skills.read_skill_file("jobsearch-vacancy", "references/letter.md").strip()
     for bad in ["../jobsearch-setup/SKILL.md", "/etc/passwd", "references/../../../CLAUDE.md"]:
         assert skills.read_skill_file("jobsearch-vacancy", bad) is None
@@ -199,3 +199,32 @@ def test_classify_api_errors():
         is ClaudeFailure.NO_PERMISSION
     assert classify(anthropic.APIConnectionError(request=httpx.Request("POST", "https://x"))) \
         is ClaudeFailure.UNAVAILABLE
+
+
+def test_history_drops_earlier_web_results_and_citations():
+    history = build_history([
+        [{"role": "user", "content": [{"type": "text", "text": "найди"}]}],
+        [{"role": "assistant", "content": [
+            {"type": "server_tool_use", "id": "s1", "name": "web_search", "input": {"query": "x"}},
+            {"type": "web_search_tool_result", "tool_use_id": "s1", "content": [
+                {"type": "web_search_result", "url": "https://x", "title": "t",
+                 "encrypted_content": "e"}]},
+            {"type": "text", "text": "Нашёл", "citations": [
+                {"type": "web_search_result_location", "url": "https://x", "title": "t",
+                 "encrypted_index": "i", "cited_text": "c"}]},
+            {"type": "tool_use", "id": "t1", "name": "save_cv", "input": {}},
+        ]},
+         {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "t1",
+                                       "content": "ok"}]},
+         {"role": "assistant", "content": [
+             {"type": "server_tool_use", "id": "s2", "name": "web_fetch", "input": {}},
+             {"type": "web_fetch_tool_result", "tool_use_id": "s2", "content": {}}]}],
+        [{"role": "user", "content": [{"type": "text", "text": "заполнил"}]}],
+    ])
+    assert history[1]["content"] == [
+        {"type": "text", "text": "Нашёл"},
+        {"type": "tool_use", "id": "t1", "name": "save_cv", "input": {}},
+    ]
+    assert history[3] == {"role": "assistant",
+                          "content": [{"type": "text", "text": "(looked things up on the web)"}]}
+    assert [m["role"] for m in history] == ["user", "assistant", "user", "assistant", "user"]

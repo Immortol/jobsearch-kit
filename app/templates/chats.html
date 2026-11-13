@@ -1,17 +1,15 @@
 {% extends "base.html" %}
-{% block title %}{{ _("Chat") }} · Jobsearch Kit{% endblock %}
+{% block title %}{{ _("My chats") }} · Jobsearch Kit{% endblock %}
 {% block content %}
-<h1>{{ _("Chat with the assistant") }}</h1>
+<h1>{{ _("My chats") }}</h1>
 <p class="muted">{{ _("Send a link to a vacancy or its text: the assistant opens it and assesses it against your rules.") }}</p>
 
 <section class="card">
-  {% if error == "bad_message" %}<p class="note err">{{ _("Write a message (up to 20,000 characters).") }}</p>{% endif %}
+  {% if error %}{% include "_composer_error.html" %}{% endif %}
   {% if user.api_key %}
-  <form method="post" action="/chats" class="composer" data-composer>
+  <form method="post" action="/chats" enctype="multipart/form-data" class="composer" data-composer>
     <label for="message">{{ _("New chat") }}</label>
-    <textarea id="message" name="message" rows="3" required
-              placeholder="{{ _('Here is a vacancy: https://…') }}"></textarea>
-    <button type="submit">{{ _("Send") }}</button>
+    {% with placeholder = _("Here is a vacancy: https://…"), running = false %}{% include "_composer_fields.html" %}{% endwith %}
   </form>
   {% else %}
   {% include "_no_key.html" %}
@@ -20,7 +18,7 @@
 
 {% if chats %}
 <section class="card">
-  <h2>{{ _("Your chats") }}</h2>
+  <h2>{{ _("Earlier chats") }}</h2>
   <ul class="files">
     {% for c in chats %}
     <li><a href="/chats/{{ c.id }}">{{ c.title or _("Untitled") }}</a>

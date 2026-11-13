@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Documents") }} · Jobsearch Kit{% endblock %}
+{% block content %}
+<h1>{{ _("Documents") }}</h1>
+
+<section class="card">
+  <h2>{{ _("Master CV") }}</h2>
+  {% if current %}
+  <p class="muted">{{ _("Version of {date} UTC", date=cv.created_at.strftime("%Y-%m-%d %H:%M")) }}{% if cv.pages %} · {{ _("pages: {n}", n=cv.pages) }}{% endif %}</p>
+  <ul class="files">
+    {% for f in current %}
+    <li><a href="/files/{{ f.id }}">{{ f.filename }}</a>
+      <span class="muted">{{ "PDF" if f.kind == "cv_pdf" else _("Word, to edit") }}</span></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">{{ _("No CV yet. It appears here after the first setup meeting.") }}</p>
+  <form method="post" action="/setup" class="inline"><button type="submit">{{ _("Start setup") }}</button></form>
+  {% endif %}
+</section>
+
+{% if generated %}
+<section class="card">
+  <h2>{{ _("Earlier versions") }}</h2>
+  <ul class="files">
+    {% for f in generated %}
+    <li><a href="/files/{{ f.id }}">{{ f.filename }}</a>
+      <span class="muted">{{ f.created_at.strftime("%Y-%m-%d %H:%M") }} UTC</span></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if uploads %}
+<section class="card">
+  <h2>{{ _("Files you sent") }}</h2>
+  <ul class="files">
+    {% for f in uploads %}
+    <li><a href="/files/{{ f.id }}">{{ f.filename }}</a>
+      <span class="muted">{{ f.created_at.strftime("%Y-%m-%d %H:%M") }} UTC</span></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

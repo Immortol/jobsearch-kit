@@ -27,5 +27,9 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+      - name: LibreOffice for CV PDFs (decision 0010)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libreoffice-writer-nogui fonts-liberation
       - run: pip install -r requirements-dev.txt
       - run: python -m pytest

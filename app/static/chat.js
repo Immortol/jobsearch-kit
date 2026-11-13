@@ -41,11 +41,44 @@
     });
   });
 
+  function showFileName(input) {
+    var label = input.closest(".attach");
+    var name = label && label.querySelector("[data-attach-name]");
+    if (!name) return;
+    if (!name.dataset.empty) name.dataset.empty = name.textContent;
+    var file = input.files && input.files[0];
+    name.textContent = file ? file.name : name.dataset.empty;
+    label.classList.toggle("has-file", !!file);
+  }
+
+  document.addEventListener("change", function (e) {
+    if (e.target.matches && e.target.matches("input[data-attach]")) showFileName(e.target);
+  });
+
+  document.addEventListener("htmx:beforeRequest", function (e) {
+    // Answer buttons belong to the question just answered: remove them once anything is sent.
+    if (e.detail.elt.closest && (e.detail.elt.closest("[data-choices]") ||
+        e.detail.elt.matches("form[data-composer]"))) {
+      document.querySelectorAll("[data-choices]").forEach(function (el) {
+        el.classList.add("answered");
+      });
+    }
+  });
+
   document.addEventListener("htmx:afterRequest", function (e) {
     var form = composer();
     if (form && e.detail.elt === form && e.detail.successful) {
       form.reset();
+      var input = form.querySelector("input[data-attach]");
+      if (input) showFileName(input);
+    }
+    if (e.detail.successful) {
+      document.querySelectorAll("[data-choices].answered").forEach(function (el) { el.remove(); });
       scrollDown();
+    } else {
+      document.querySelectorAll("[data-choices].answered").forEach(function (el) {
+        el.classList.remove("answered");
+      });
     }
   });
   document.addEventListener("htmx:afterSettle", function () {

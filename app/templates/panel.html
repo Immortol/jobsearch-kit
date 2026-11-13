@@ -3,15 +3,46 @@
 <h1>{{ _("Panel") }}</h1>
 <p class="muted">{{ _("Signed in as {email}", email=user.email) }}</p>
 
+{% if not user.api_key %}
+<section class="card">
+  <h2>{{ _("API key") }}</h2>
+  <p><span class="dot warn"></span>{{ _("Not connected yet") }}</p>
+  <a class="button" href="/settings/key">{{ _("Add key") }}</a>
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>{{ _("Setup") }}</h2>
+  {% if setup_started %}
+  <p>{{ _("The assistant remembers where you stopped. Each meeting takes 15–20 minutes.") }}</p>
+  {% else %}
+  <p>{{ _("Three short meetings with the assistant: your CV, your strengths, your search. After the first one you already have a CV.") }}</p>
+  {% endif %}
+  {% if user.api_key %}
+  <form method="post" action="/setup" class="inline">
+    <button type="submit">{{ _("Continue setup") if setup_started else _("Start setup") }}</button>
+  </form>
+  {% endif %}
+  {% if has_questionnaire %}
+  <ul class="links"><li><a href="/questionnaire">{{ _("Questionnaire") }}</a></li></ul>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>{{ _("My chats") }}</h2>
+  <p>{{ _("Send a link to a vacancy or its text: the assistant opens it and assesses it against your rules.") }}</p>
+  <a class="button" href="/chats">{{ _("Open my chats") }}</a>
+</section>
+
 <div class="grid">
   <section class="card">
-    <h2>{{ _("API key") }}</h2>
-    {% if user.api_key %}
-    <p><span class="dot ok"></span>{{ _("Connected, ends with …{last4}", last4=user.api_key.last4) }}</p>
+    <h2>{{ _("Documents") }}</h2>
+    {% if cv %}
+    <p>{{ _("Master CV of {date}", date=cv.created_at.strftime("%d.%m.%Y")) }}</p>
     {% else %}
-    <p><span class="dot warn"></span>{{ _("Not connected yet") }}</p>
-    <a class="button" href="/settings/key">{{ _("Add key") }}</a>
+    <p class="muted">{{ _("No CV yet") }}</p>
     {% endif %}
+    <a href="/files">{{ _("Open") }}</a>
   </section>
 
   <section class="card">
@@ -21,14 +52,8 @@
   </section>
 </div>
 
-<section class="card">
-  <h2>{{ _("Chat with the assistant") }}</h2>
-  <p>{{ _("Send a link to a vacancy or its text: the assistant opens it and assesses it against your rules.") }}</p>
-  <a class="button" href="/chats">{{ _("Open chat") }}</a>
-</section>
-
 <section class="card empty">
   <h2>{{ _("Coming next") }}</h2>
-  <p class="muted">{{ _("Questionnaire, CV, application packages and the tracker will appear here step by step.") }}</p>
+  <p class="muted">{{ _("Application packages, Gmail drafts and the tracker will appear here step by step.") }}</p>
 </section>
 {% endblock %}

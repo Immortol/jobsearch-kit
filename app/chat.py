@@ -5,6 +5,7 @@ While it runs, its streamed text and current step live in memory (`LIVE`); the p
 every second. When it ends, the result is saved to the database and the live entry is dropped.
 """
 
+import base64
 import logging
 import threading
 from collections.abc import Callable
@@ -21,7 +22,8 @@ from app.agent import Progress, build_history, run_reply
 from app.claude import ClaudeClient, ClaudeFailure
 from app.config import get_settings
 from app.db import get_sessionmaker
-from app.models import Chat, ChatMessage, UsageRecord, User, utcnow
+from app.files import PDF, get_file
+from app.models import Chat, ChatMessage, UsageRecord, User, UserFile, utcnow
 from app.security import decrypt_secret
 
 
@@ -97,15 +99,21 @@ def is_running(chat: Chat) -> bool:
     return any(m.status == "running" for m in chat.messages)
 
 
-def start_reply(db: Session, user: User, chat: Chat, text: str) -> ChatMessage:
+def start_reply(db: Session, user: User, chat: Chat, text: str,
+                attachment: UserFile | None = None) -> ChatMessage:
     """Saves the user's message and a running assistant message (committed, so the worker sees
     them). Returns the assistant message; the caller submits `reply_job` to the runner."""
     if not chat.title:
-        chat.title = chat_title(text)
+        chat.title = chat_title(text or (attachment.filename if attachment else ""))
     chat.updated_at = utcnow()
-    db.add(ChatMessage(chat=chat, role="user", text=text, api_messages=[
-        {"role": "user", "content": [{"type": "text", "text": text}]}
-    ]))
+    content: list[dict] = []
+    if attachment is not None:
+        content.append({"type": "user_file", "file_id": attachment.id})
+    if text:
+        content.append({"type": "text", "text": text})
+    db.add(ChatMessage(chat=chat, role="user", text=text,
+                       file_id=attachment.id if attachment else None,
+                       api_messages=[{"role": "user", "content": content}]))
     reply = ChatMessage(chat=chat, role="assistant", status="running")
     db.add(reply)
     db.commit()
@@ -165,8 +173,10 @@ def _run(message_id: int, client: ClaudeClient, live: LiveReply) -> None:
         result = run_reply(
             client=client, api_key=decrypt_secret(user.api_key.encrypted_key),
             model=get_settings().agent_model, db=db, user=user,
-            history=build_history(earlier), progress=_RecordingProgress(live, user.id),
+            history=build_history(earlier, lambda fid: file_block(db, user, fid)),
+            progress=_RecordingProgress(live, user.id), chat_id=chat.id,
         )
+        reply.choices = result.choices
         reply.text = result.text
         reply.api_messages = result.api_messages
         reply.cost_usd = result.cost
@@ -178,6 +188,19 @@ def _run(message_id: int, client: ClaudeClient, live: LiveReply) -> None:
             reply.error = "step_limit" if result.hit_step_limit else None
         chat.updated_at = utcnow()
         db.commit()
+
+
+def file_block(db: Session, user: User, file_id: int) -> dict:
+    """An attached file as the API sees it: a PDF document, or the extracted text."""
+    f = get_file(db, user, file_id)
+    if f is None:
+        return {"type": "text", "text": "(an attached file that no longer exists)"}
+    if f.content_type == PDF:
+        return {"type": "document", "title": f.filename,
+                "source": {"type": "base64", "media_type": PDF,
+                           "data": base64.b64encode(f.data).decode()}}
+    return {"type": "text",
+            "text": f"Attached file «{f.filename}» (file id {f.id}):\n\n{f.text or ''}"}
 
 
 def _finish_with_error(message_id: int, error: str) -> None:

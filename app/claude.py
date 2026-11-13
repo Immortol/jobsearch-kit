@@ -5,6 +5,7 @@ scripted fake and every message can be stored in the database as is.
 """
 
 import enum
+import logging
 from collections.abc import Callable
 from typing import Protocol
 
@@ -12,6 +13,8 @@ import anthropic
 import httpx2
 
 from app.config import get_settings
+
+log = logging.getLogger("app.claude")
 
 
 class ClaudeFailure(enum.Enum):
@@ -89,6 +92,8 @@ class AnthropicClient:
                 message = stream.get_final_message()
         except anthropic.APIError as exc:
             # The exception text never contains the key; keep only status and message.
+            log.warning("Claude API error %s: %s", getattr(exc, "status_code", "-"),
+                        str(getattr(exc, "message", ""))[:500])
             raise ClaudeError(classify(exc), getattr(exc, "message", "")[:300]) from None
         return message.model_dump(mode="json", exclude_none=True)
 

@@ -13,8 +13,8 @@ from pathlib import Path
 DEFAULT_SKILLS_DIR = Path(__file__).resolve().parent.parent / "skills"
 
 # Skills the panel can run so far. The others need tools that come in later stages
-# (questionnaire and CV — stage 3, tracker/letters/Gmail — stage 4, night jobs — stage 5).
-ENABLED_SKILLS = ("jobsearch-vacancy",)
+# (tracker/letters/Gmail — stage 4, night jobs — stage 5, interviews and reviews — stage 6).
+ENABLED_SKILLS = ("jobsearch-setup", "jobsearch-vacancy")
 
 TEXT_SUFFIXES = {".md", ".py", ".mjs", ".json", ".sh", ".txt"}
 MAX_FILE_CHARS = 60_000

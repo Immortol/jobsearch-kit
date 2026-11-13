@@ -100,7 +100,7 @@ def test_running_reply_is_polled_until_done(client, outbox, fake, db):
     held.run_all()
     r = client.get(poll)
     assert "готово" in r.text and "hx-get" not in r.text
-    assert 'id="spend" class="spend" href="/settings/key" hx-swap-oob="true"' in r.text
+    assert '<p id="spend" class="spend" hx-swap-oob="true">' in r.text
 
 
 def test_interrupted_reply_is_marked(client, outbox, fake, db):

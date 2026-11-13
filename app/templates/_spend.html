@@ -1,8 +1,12 @@
-{# Always visible spend on the user's own API key (decision 0009). Re-sent out of band when a
-   reply finishes, so it stays current without a reload. #}
+{# Key status and spend on the user's own API key, always visible (decision 0009). Re-sent out of
+   band when a reply finishes, so it stays current without a reload. #}
 {% if spend is not none %}
-<a id="spend" class="spend" href="/settings/key"{% if oob %} hx-swap-oob="true"{% endif %}
-   title="{{ _('Estimate from the tokens of each reply. The exact amount is in your Anthropic console.') }}">
-  {{ _("Spent: {month} this month · {total} in total", month=spend.month|money, total=spend.total|money) }}
-</a>
+<p id="spend" class="spend"{% if oob %} hx-swap-oob="true"{% endif %}>
+  {% if user.api_key %}
+  <a href="/settings/key">{{ _("Key …{last4}", last4=user.api_key.last4) }}</a>
+  {% else %}
+  <a href="/settings/key" class="warn">{{ _("No API key") }}</a>
+  {% endif %}
+  · <span title="{{ _('Estimate from the tokens of each reply. The exact amount is in your Anthropic console.') }}">{{ _("Spent: {month} this month · {total} in total", month=spend.month|money, total=spend.total|money) }}</span>
+</p>
 {% endif %}
