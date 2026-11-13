@@ -90,6 +90,11 @@ def test_paste_two_links_makes_two_isolated_cards(client, outbox, fake, db):
     assert "Beta · Sales" in client.get("/tracker?f=all").text
     assert "Beta" in client.get("/vacancies?f=all&q=beta").text
     assert "Acme" not in client.get("/vacancies?q=beta").text
+    # By role, and by several words in any order.
+    assert "Beta" in client.get("/vacancies?q=sales").text
+    assert "Acme" not in client.get("/vacancies?q=sales").text
+    assert "Acme · PM" in client.get("/vacancies?q=pm+acme").text
+    assert "Acme" not in client.get("/vacancies?q=pm+beta").text
     assert "Acme" in client.get("/vacancies?f=good").text and \
         "Beta" not in client.get("/vacancies?f=good").text
 
