@@ -238,7 +238,9 @@ def test_package_folder_has_letter_cv_and_attachments(client, outbox, fake, db):
                     files={"file": ("Zeugnis.pdf", b"%PDF-1.4 zeugnis", "application/pdf")},
                     follow_redirects=False)
     assert r.status_code == 303
-    client.post("/files", files={"file": ("private.pdf", b"%PDF-1.4 x", "application/pdf")})
+    client.post("/files", files=[("file", ("private.pdf", b"%PDF-1.4 x", "application/pdf")),
+                                 ("file", ("scan.png", b"\x89PNG data", "image/png"))])
+    assert db.scalar(select(func.count()).select_from(UserFile)) == 3
     assert client.post("/files", files={"file": ("x.exe", b"MZ", "x")},
                        follow_redirects=False).headers["location"] == "/files?error=type"
     assert "✓ в каждый пакет" in client.get("/files").text

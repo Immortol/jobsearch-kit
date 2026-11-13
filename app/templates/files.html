@@ -60,8 +60,8 @@
   </ul>
   {% endif %}
   <form method="post" action="/files" enctype="multipart/form-data" class="upload-form">
-    <label class="attach"><input type="file" name="file" accept=".pdf,.docx,.jpg,.jpeg,.png" data-attach required>
-      <span aria-hidden="true">📎</span><span class="attach-name" data-attach-name>{{ _("Choose a file: PDF, Word, JPG, PNG, up to 5 MB") }}</span></label>
+    <label class="attach"><input type="file" name="file" accept=".pdf,.docx,.jpg,.jpeg,.png" data-attach multiple required>
+      <span aria-hidden="true">📎</span><span class="attach-name" data-attach-name>{{ _("Choose files: PDF, Word, JPG, PNG, up to 5 MB each") }}</span></label>
     <label class="check"><input type="checkbox" name="in_package" value="1" checked> {{ _("in every package") }}</label>
     <button type="submit">{{ _("Upload") }}</button>
   </form>
