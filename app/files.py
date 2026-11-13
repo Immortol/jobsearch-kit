@@ -8,7 +8,7 @@ from docx import Document
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import UserFile, User
+from app.models import CvVersion, UserFile, User
 
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 MAX_TEXT_CHARS = 60_000
@@ -17,6 +17,8 @@ PDF = "application/pdf"
 DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 TXT = "text/plain"
 UPLOAD_TYPES = {".pdf": PDF, ".docx": DOCX, ".txt": TXT, ".md": TXT}
+# Package attachments may also be scans.
+IMAGE_TYPES = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png"}
 
 
 class UploadError(Exception):
@@ -41,13 +43,18 @@ def _docx_text(data: bytes) -> str:
     return "\n".join(p for p in parts if p.strip())
 
 
-def read_upload(filename: str, data: bytes) -> tuple[str, str | None]:
-    """Checks an upload and returns (content type, extracted text; None for PDFs)."""
+def read_upload(filename: str, data: bytes, images: bool = False) -> tuple[str, str | None]:
+    """Checks an upload and returns (content type, extracted text; None for PDFs and images)."""
     if not data:
         raise UploadError("empty")
     if len(data) > MAX_UPLOAD_BYTES:
         raise UploadError("too_big")
     suffix = ("." + filename.rsplit(".", 1)[-1].lower()) if "." in filename else ""
+    if images and suffix in IMAGE_TYPES:
+        signature = (b"\xff\xd8\xff", b"\x89PNG")
+        if not data.startswith(signature):
+            raise UploadError("broken")
+        return IMAGE_TYPES[suffix], None
     content_type = UPLOAD_TYPES.get(suffix)
     if content_type is None:
         raise UploadError("type")
@@ -84,3 +91,14 @@ def get_file(db: Session, user: User, file_id: int) -> UserFile | None:
 def list_files(db: Session, user: User) -> list[UserFile]:
     return list(db.scalars(select(UserFile).where(UserFile.user_id == user.id)
                            .order_by(UserFile.id.desc())))
+
+
+def package_attachments(db: Session, user: User) -> list[UserFile]:
+    return list(db.scalars(select(UserFile).where(UserFile.user_id == user.id,
+                                                  UserFile.in_package.is_(True))
+                           .order_by(UserFile.id)))
+
+
+def latest_cv(db: Session, user: User) -> CvVersion | None:
+    return db.scalar(select(CvVersion).where(CvVersion.user_id == user.id)
+                     .order_by(CvVersion.id.desc()).limit(1))
