@@ -8,6 +8,7 @@
   <title>{% block title %}Jobsearch Kit{% endblock %}</title>
   <link rel="stylesheet" href="/static/app.css">
   <script src="/static/htmx.min.js" defer></script>
+  <script src="/static/chat.js" defer></script>
 </head>
 <body>
   <header class="top">
@@ -15,6 +16,7 @@
     {% if user %}
     <nav>
       <a href="/panel">{{ _("Panel") }}</a>
+      <a href="/chats">{{ _("Chat") }}</a>
       <a href="/rules">{{ _("Rules") }}</a>
       <a href="/settings/key">{{ _("API key") }}</a>
       <a href="/account">{{ _("Account") }}</a>
@@ -23,6 +25,7 @@
         <button class="link" type="submit">{{ _("Sign out") }}</button>
       </form>
     </nav>
+    {% include "_spend.html" %}
     {% endif %}
   </header>
   <main>

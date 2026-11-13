@@ -1,6 +1,6 @@
 # Architecture
 
-> Status: **approved 2026-11-02** (stage 0). Key decisions: `docs/decisions/0002-stack-fastapi-htmx.md`, `docs/decisions/0003-scanner-inside-worker.md`.
+> Status: **approved 2026-11-02** (stage 0). Key decisions: `docs/decisions/0002-stack-fastapi-htmx.md`, `docs/decisions/0003-scanner-inside-worker.md`, `docs/decisions/0009-agent-messages-api.md`.
 
 ## Principles
 1. **Simple and cheap to run**: 2–5 users, one assistant developer. As few services as possible.
@@ -26,7 +26,8 @@ The comparison the decision was based on:
 ## Layout
 ```
 Railway project "jobsearch-kit"
-├─ web        FastAPI: panel, chat (SSE), questionnaire, tracker, Gmail connection (OAuth)
+├─ web        FastAPI: panel, chat (replies in a thread pool, polled), questionnaire, tracker,
+│             Gmail connection (OAuth). Runs as a single process (decision 0009)
 ├─ worker     same code + Node in the image, nightly cron — one sequential chain:
 │             scanner (career-ops v1.32.0 + presieve from skills/jobsearch-scanner/assets)
 │             → presieve → assessment (Batch) → packages → digest   (decision 0003)
@@ -43,13 +44,14 @@ Only Python code writes to the database; the scanner hands its output to the wor
 - **Files** (CVs, PDF letters): generated on the server, stored in Railway object storage.
 - **Tracker**: a table in the panel; export to Google Sheets via a service account (no user OAuth), stage 4.
 
-## Skills on the web
-The skills are written for the Claude app: "Rules/ in the project", Artifact, Gmail connector, scheduling. On the web an agent on the Messages API executes them:
-- **System prompt** = `SKILL.md` (+ the needed `references/` on demand via a `read_skill_file` tool).
-- **Agent tools** (ours): `read_rules` / `write_rules` (user rules in the DB), `tracker_*`, `make_letter_pdf`, `make_cv`, `list_new_vacancies`, `gmail_*` (search/read the user's mail, create drafts, labels — via their OAuth token). Anthropic server tools: `web_search`, `web_fetch`.
-- **Platform adapter**: a short shared prompt block: "in this environment 'project/Rules' = the read_rules/write_rules tools; scheduling is done by the worker; email = gmail_*". The `SKILL.md` files themselves change minimally so the Claude-app kit keeps working.
-- Alternative — Anthropic's Skills API (upload skills as is, run in a code container). To be checked in stage 2: if it supports the tools we need and is cheaper to maintain — use it.
+## Skills on the web (decision 0009)
+The skills are written for the Claude app: "Rules/ in the project", Artifact, Gmail connector, scheduling. On the web an agent on the Messages API executes them (`app/agent.py`):
+- **System prompt** = a short platform adapter + the catalog of skills enabled in the panel (name and description). Claude loads the skill it needs with `load_skill` and its `references/` with `read_skill_file`.
+- **Agent tools** (ours): `read_rules` / `write_rules` (user rules in the DB; changes logged in `CHANGELOG.md`); later `tracker_*`, `make_letter_pdf`, `make_cv`, `list_new_vacancies`, `gmail_*`. Anthropic server tools: `web_search`, `web_fetch`.
+- **Platform adapter**: "in this environment 'project/Rules' = the read_rules/write_rules tools; what is not available yet is skipped". The `SKILL.md` files stay unchanged so the Claude-app kit keeps working.
+- **Enabled skills** are listed in `app/skills.py` (`ENABLED_SKILLS`): each stage turns on the skills whose tools exist.
+- **Cost**: every call's `usage` is priced (`app/pricing.py`) and stored; the panel always shows the spend this month and in total.
 
 ## Open questions (resolved in their stages)
-- Messages API + own tools vs Skills API (stage 2).
+- ~~Messages API + own tools vs Skills API (stage 2)~~ — Messages API, decision 0009.
 - File storage: Railway bucket vs Postgres (stage 3).

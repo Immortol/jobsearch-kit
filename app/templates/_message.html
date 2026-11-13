@@ -1,0 +1,18 @@
+{% set m = v.m %}
+{% if m.role == "user" %}
+<div class="msg user" id="msg-{{ m.id }}">{{ m.text }}</div>
+{% else %}
+<div class="msg assistant {{ m.status }}" id="msg-{{ m.id }}"
+     {% if m.status == "running" %}hx-get="/chats/{{ m.chat_id }}/messages/{{ m.id }}"
+     hx-trigger="load delay:1s" hx-swap="outerHTML"{% endif %}>
+  {% if v.text %}<div class="md">{{ v.text|markdown }}</div>{% endif %}
+  {% if m.status == "running" %}
+  <p class="progress muted"><span class="spinner" aria-hidden="true"></span>{{ _(v.label or "Thinking") }}…
+    {% if v.cost %}<span class="cost">{{ _("so far {cost}", cost=v.cost|money) }}</span>{% endif %}</p>
+  {% else %}
+  {% if v.error_message %}<p class="note {{ 'warn' if m.status == 'done' else 'err' }}">{{ _(v.error_message) }}</p>{% endif %}
+  {% if v.cost %}<p class="cost muted">{{ _("This reply: {cost}", cost=v.cost|money) }}</p>{% endif %}
+  {% endif %}
+</div>
+{% if finished_now %}{% with oob = true %}{% include "_spend.html" %}{% endwith %}{% endif %}
+{% endif %}

@@ -16,14 +16,16 @@ Statuses: `done` · `in progress` · `next` · `later`.
 |---|---|---|---|
 | 0 | Repository, CLAUDE.md, plan, architecture (draft), skills in repo, ZIP build | architecture approved ("go" on `ARCHITECTURE.md`); ZIPs from `dist/` match kit v1.1 | done |
 | 1 | Skeleton: service on Railway, Postgres, email-link login, API key storage (encrypted), user rules | logs in via a link from an email, enters a key, sees an empty panel | done (real API key check moved to stage 2) |
-| 2 | "Brain": skills-based agent via the API + chat in the panel | enters a real API key; writes "here is a vacancy <link>" in chat → gets an assessment per their rules | next |
-| 3 | Questionnaire and CV: questionnaire in the panel, rules from answers, master CV (DOCX/PDF) | goes through setup as a new user, downloads the CV | later |
+| 2 | "Brain": skills-based agent via the API + chat in the panel | enters a real API key; writes "here is a vacancy <link>" in chat → gets an assessment per their rules; sees the dollars spent | done |
+| 3 | Questionnaire and CV: questionnaire in the panel, rules from answers, master CV (DOCX/PDF) | goes through setup as a new user, downloads the CV | next |
 | 4 | Vacancies: application package (PDF letter), Gmail connection + draft in Gmail, tracker in the panel (+ export to Google Sheets) | one real package; its draft in Gmail; a row in the tracker | later |
 | 5 | Night: career-ops scanner on the server, job alerts and employer replies read from Gmail, assessment (Batch), morning digest by email and in the panel | digest arrives three mornings in a row; a reply updates the tracker | later |
 | 6 | Interviews, weekly review, growth | interview card, mock interview, weekly review | later |
 | 7 | Pilot with the tester | a week of use without intervention | later |
 
 ## Backlog
+- Model choice in the panel settings (Sonnet / Haiku) — decision 0009 keeps Sonnet only.
+- Monthly spend limit per user in the panel (on top of the workspace limit in the Anthropic console).
 - In-app payments (option B) — once there are 10–20 happy users.
 - Forwarding address for users not on Gmail (or if Google tightens rules for unverified apps) — see 0004/0008.
 - Google verification of the Gmail connection — only if the panel grows past 100 users.

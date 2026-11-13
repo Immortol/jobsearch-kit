@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     session_days: int = 30
 
     anthropic_api_url: str = "https://api.anthropic.com"
+    agent_model: str = "claude-sonnet-5-5"  # chat model (decision 0009)
+    agent_workers: int = 4                  # replies generated at the same time
 
     @field_validator("database_url")
     @classmethod

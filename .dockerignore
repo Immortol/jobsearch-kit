@@ -6,6 +6,5 @@ __pycache__
 .env
 dist
 docs
-skills
 scripts
 tests
