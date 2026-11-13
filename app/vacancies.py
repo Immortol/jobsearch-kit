@@ -168,11 +168,14 @@ def list_vacancies(db: Session, user: User, *, q: str = "", flt: str = "all",
                    statuses: tuple[str, ...] | None = None, offset: int = 0,
                    limit: int = PAGE_SIZE) -> list[Vacancy]:
     stmt = select(Vacancy).where(Vacancy.user_id == user.id)
-    if q.strip():
-        like = f"%{q.strip()[:100]}%"
+    # Every word of the query must occur somewhere in the vacancy, in any order: company, role,
+    # city, link, assessment, notes, the ad.
+    for word in q.strip()[:100].split()[:6]:
+        like = f"%{word}%"
         stmt = stmt.where(or_(Vacancy.company.ilike(like), Vacancy.role.ilike(like),
                               Vacancy.location.ilike(like), Vacancy.url.ilike(like),
-                              Vacancy.summary.ilike(like), Vacancy.notes.ilike(like)))
+                              Vacancy.summary.ilike(like), Vacancy.notes.ilike(like),
+                              Vacancy.description.ilike(like)))
     kind = FILTERS.get(flt) if statuses is None else statuses
     if kind == "good":
         stmt = stmt.where(Vacancy.score >= 4)

@@ -21,7 +21,8 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     sync();
-    scrollDown();
+    // A chat opens at its newest message; a vacancy card opens at its top (the assessment).
+    if (location.pathname.indexOf("/chats/") === 0) scrollDown();
     var form = composer();
     if (!form) return;
     var box = form.querySelector("textarea");
@@ -75,7 +76,9 @@
     }
     if (e.detail.successful) {
       document.querySelectorAll("[data-choices].answered").forEach(function (el) { el.remove(); });
-      scrollDown();
+      // Scroll only when the person sent something. The once-a-second refresh of a running
+      // reply must not move the page: they may be reading something else.
+      if ((e.detail.requestConfig || {}).verb === "post") scrollDown();
     } else {
       document.querySelectorAll("[data-choices].answered").forEach(function (el) {
         el.classList.remove("answered");
