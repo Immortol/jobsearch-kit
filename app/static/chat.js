@@ -47,7 +47,8 @@
     if (!name) return;
     if (!name.dataset.empty) name.dataset.empty = name.textContent;
     var file = input.files && input.files[0];
-    name.textContent = file ? file.name : name.dataset.empty;
+    var more = input.files && input.files.length > 1 ? " +" + (input.files.length - 1) : "";
+    name.textContent = file ? file.name + more : name.dataset.empty;
     label.classList.toggle("has-file", !!file);
   }
 

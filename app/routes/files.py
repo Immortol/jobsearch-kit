@@ -15,6 +15,7 @@ from app.models import User
 from app.web import render
 
 router = APIRouter(prefix="/files")
+MAX_FILES_PER_UPLOAD = 10
 
 
 
@@ -33,18 +34,21 @@ def files_page(request: Request, error: str = "", user: User = Depends(require_u
 
 
 @router.post("")
-async def upload(request: Request, file: UploadFile = File(...), in_package: str = Form(""),
-                 user: User = Depends(require_user), db: Session = Depends(get_db)):
-    """A document of the person's own, usually one that goes into every package."""
-    data = await file.read(MAX_UPLOAD_BYTES + 1)
-    try:
-        content_type, text = read_upload(file.filename or "", data, images=True)
-    except UploadError as exc:
-        db.rollback()
-        return RedirectResponse(f"/files?error={exc.code}", status_code=303)
-    f = save_file(db, user, kind="upload", filename=file.filename or "file",
-                  content_type=content_type, data=data, text=text)
-    f.in_package = bool(in_package)
+async def upload(request: Request, file: list[UploadFile] = File(...),
+                 in_package: str = Form(""), user: User = Depends(require_user),
+                 db: Session = Depends(get_db)):
+    """Documents of the person's own, usually ones that go into every package. Several files
+    at once are fine; if one of them is refused, none is saved and the error names the reason."""
+    for upload_file in file[:MAX_FILES_PER_UPLOAD]:
+        data = await upload_file.read(MAX_UPLOAD_BYTES + 1)
+        try:
+            content_type, text = read_upload(upload_file.filename or "", data, images=True)
+        except UploadError as exc:
+            db.rollback()
+            return RedirectResponse(f"/files?error={exc.code}", status_code=303)
+        f = save_file(db, user, kind="upload", filename=upload_file.filename or "file",
+                      content_type=content_type, data=data, text=text)
+        f.in_package = bool(in_package)
     return RedirectResponse("/files#attachments", status_code=303)
 
 

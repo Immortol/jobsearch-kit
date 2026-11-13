@@ -343,6 +343,10 @@ email text at the end of your message under a heading.
 how and until when to apply. Do not mention folders.
 - Documents for 4–5 are made right away, as the skill says. For 3 and below, offer \
 `offer_choices` with "Make documents anyway" (in the person's language) and stop.
+- When the person tells you a fact about themselves here ("remember that I have German C1", a \
+correction, a new preference), save it to their rules with `write_rules` (facts → 01_Facts.md, \
+what they look for → 03_Strategy.md; read the file first, change only what is needed), say in one \
+line what you saved, then assess this vacancy again with the new fact and update the card.
 """
 
 STORY_ADAPTER = """\
@@ -752,23 +756,22 @@ class Progress:
 FileResolver = Callable[[int], dict]
 
 
-SERVER_TOOL_BLOCKS = {"server_tool_use", "web_search_tool_result", "web_fetch_tool_result"}
-
-
 def compact_assistant(content: list[dict]) -> list[dict]:
-    """An earlier reply as it is sent again: without Anthropic's web search / fetch blocks (the
-    pages are not needed any more: the reply's text has what was found, and resending them costs
-    tokens every message) and without citations, which point into those blocks."""
+    """An earlier reply as it is sent again: only its text and our own tool calls.
+
+    Everything Anthropic's server tools produced is dropped — web search / fetch calls and
+    results, and the code-execution blocks those tools use internally — together with
+    citations, which point into those blocks. The reply's text already has what was found;
+    resending the pages costs tokens with every message, and a partial set of server blocks
+    is rejected by the API (400: a result block without its `server_tool_use`).
+    """
     out = []
     for b in content:
         kind = b.get("type")
-        if kind in SERVER_TOOL_BLOCKS:
-            continue
-        if kind == "text":
-            if b.get("text"):
-                out.append({"type": "text", "text": b["text"]})
-            continue
-        out.append(b)
+        if kind == "text" and b.get("text"):
+            out.append({"type": "text", "text": b["text"]})
+        elif kind == "tool_use":
+            out.append(b)
     return out or [{"type": "text", "text": "(looked things up on the web)"}]
 
 
