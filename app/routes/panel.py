@@ -35,8 +35,11 @@ def panel(request: Request, user: User = Depends(require_user), db: Session = De
 
 
 def _key_page(request: Request, user: User, status: str | None = None, status_code: int = 200):
-    name = "_key_card.html" if is_htmx(request) else "key.html"
-    return render(request, name, user=user, status=status, status_code=status_code)
+    htmx = is_htmx(request)
+    name = "_key_card.html" if htmx else "key.html"
+    # After saving or deleting the key, the header's "Key …xxxx · Spent" line updates too.
+    return render(request, name, user=user, status=status, status_code=status_code,
+                  update_header=htmx)
 
 
 @router.get("/settings/key")
