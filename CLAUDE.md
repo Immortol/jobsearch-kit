@@ -36,7 +36,8 @@ Edits in `skills/` change both product versions (web and the Claude-app kit). Wh
 (filled in as they appear: run, tests, migrations)
 - `scripts/build_kit.sh` — build `dist/*.zip` skills for the Claude app.
 - Local setup: Postgres 16+ (production runs 18) with databases `jsk_dev` and `jsk_test` (user/password `jsk`), LibreOffice (`soffice` on PATH, for CV PDFs; tests that need it are skipped without it), `pip install -r requirements-dev.txt`, copy `.env.example` to `.env`.
-- `python -m pytest` — tests (use `jsk_test`, never `jsk_dev`). CI runs the same on every PR.
+- `python -m pytest` — tests (use `jsk_test`, never `jsk_dev`). CI runs the same on every PR. `tests/e2e/` drives the running app in Chromium (Playwright) with a scripted Claude: free; run them before handing a stage over, add a scenario for every UI bug found.
+- Live checks with the real Claude cost Alexander's money: only on his OK, within the budget he names, through the built-in browser of the Claude app on his Mac (he signs in himself).
 - `alembic upgrade head` — apply migrations; `alembic revision --autogenerate -m "<what>"` — new migration after changing `app/models.py`.
 - `uvicorn app.main:app --reload` — run locally; in `APP_ENV=dev` sign-in links are printed to the console.
 - `python -m app.i18n_extract ru` — UI strings missing from `app/locales/ru.json`.
