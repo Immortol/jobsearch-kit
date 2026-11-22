@@ -55,9 +55,14 @@ def _composer_error(request: Request, user: User, error: str, status: int):
     return render(request, "_composer_note.html", user=user, error=error, status_code=status)
 
 
+def listed_chats(user: User) -> list[Chat]:
+    """My chats: everything except the hidden threads of vacancy cards (decision 0011)."""
+    return [c for c in user.chats if c.kind != "card"]
+
+
 @router.get("")
 def chat_list(request: Request, user: User = Depends(require_user)):
-    return render(request, "chats.html", user=user, chats=user.chats)
+    return render(request, "chats.html", user=user, chats=listed_chats(user))
 
 
 @router.post("")
@@ -76,7 +81,7 @@ async def chat_create(request: Request, message: str = Form(""),
             error = "file_" + exc.code
     if error is not None:
         db.rollback()
-        return render(request, "chats.html", user=user, chats=user.chats, error=error,
+        return render(request, "chats.html", user=user, chats=listed_chats(user), error=error,
                       status_code=400)
     return _start_chat(db, user, text, attachment, client, runner)
 
@@ -117,6 +122,8 @@ def chat_view(request: Request, chat_id: int, user: User = Depends(require_user)
     chat = _owned_chat(db, user, chat_id)
     if chat is None:
         return render(request, "not_found.html", user=user, status_code=404)
+    if chat.kind == "card" and chat.vacancy_id:
+        return RedirectResponse(f"/vacancies/{chat.vacancy_id}", status_code=303)
     return render(request, "chat.html", user=user, chat=chat,
                   messages=[_message_view(m, i == len(chat.messages) - 1)
                             for i, m in enumerate(chat.messages)],

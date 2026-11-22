@@ -218,7 +218,8 @@ def test_history_drops_earlier_web_results_and_citations():
                                        "content": "ok"}]},
          {"role": "assistant", "content": [
              {"type": "server_tool_use", "id": "s2", "name": "web_fetch", "input": {}},
-             {"type": "web_fetch_tool_result", "tool_use_id": "s2", "content": {}}]}],
+             {"type": "web_fetch_tool_result", "tool_use_id": "s2", "content": {}},
+             {"type": "code_execution_tool_result", "tool_use_id": "s3", "content": {}}]}],
         [{"role": "user", "content": [{"type": "text", "text": "заполнил"}]}],
     ])
     assert history[1]["content"] == [
