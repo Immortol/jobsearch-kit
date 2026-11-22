@@ -326,3 +326,42 @@ def test_header_shows_key_and_panel_order(client, outbox, fake):
                                      "<h2>Документы</h2>", "<h2>Правила</h2>")]
     assert order == sorted(order)
     assert 'href="/settings/key">API-ключ</a>' not in page.split("</nav>")[0]
+
+
+def test_own_file_becomes_the_master_cv(client, outbox, fake, db, monkeypatch):
+    monkeypatch.setattr(cv, "pdf_text", lambda data, limit=20_000: "Anna Müller, PM")
+    monkeypatch.setattr(cv, "pdf_pages", lambda data: 2)
+    signed_in(client, outbox)
+    r = client.post("/files/cv", files={"file": ("Mein CV.pdf", b"%PDF-1.4 own", "x")},
+                    follow_redirects=False)
+    assert r.headers["location"] == "/files"
+    version = db.scalar(select(CvVersion))
+    assert version.content["uploaded"] and version.pages == 2 and version.docx_id is None
+    page = client.get("/files").text
+    assert "Mein CV.pdf" in page and "твой собственный файл" in page
+    assert client.get(f"/files/{version.pdf_id}").content == b"%PDF-1.4 own"
+
+    fake.queue(tool_call(("t1", "read_cv", {})), reply("Что меняем?"))
+    r = client.post("/files/cv/edit", follow_redirects=False)
+    chat_page = client.get(r.headers["location"]).text
+    assert "Хочу изменить мастер-резюме" in chat_page and "Что меняем?" in chat_page
+    result = fake.requests[-1]["messages"][-1]["content"][0]["content"]
+    assert "person's own file «Mein CV.pdf»" in result and "Anna Müller, PM" in result
+
+    monkeypatch.setattr(cv, "pdf_text", lambda data, limit=20_000: "  ")
+    r = client.post("/files/cv", files={"file": ("scan.pdf", b"%PDF-1.4 s", "x")},
+                    follow_redirects=False)
+    assert r.headers["location"] == "/files?error=scan"
+    assert client.post("/files/cv", files={"file": ("cv.txt", b"text", "x")},
+                       follow_redirects=False).headers["location"] == "/files?error=type"
+    assert db.scalar(select(func.count()).select_from(CvVersion)) == 1
+
+
+@NEEDS_SOFFICE
+def test_own_word_cv_is_converted_to_pdf(client, outbox, fake, db):
+    signed_in(client, outbox)
+    client.post("/files/cv", files={"file": ("cv.docx", docx_bytes("Anna, PM at Acme"), "x")})
+    version = db.scalar(select(CvVersion))
+    pdf = db.get(UserFile, version.pdf_id)
+    assert pdf.filename == "cv.pdf" and pdf.data.startswith(b"%PDF") and version.docx_id
+    assert "Anna, PM at Acme" in version.content["text"]

@@ -165,8 +165,20 @@ def require_owner(user: User = Depends(require_user)) -> User:
     return user
 
 
+def revoke_google(db: Session, email: str) -> None:
+    """Withdraws the panel's access at Google before the token is deleted (decision 0008)."""
+    from app.google import get_google
+    from app.models import GoogleAccount
+    from app.security import decrypt_secret
+    acc = db.scalar(select(GoogleAccount).join(User, User.id == GoogleAccount.user_id)
+                    .where(User.email == email))
+    if acc is not None:
+        get_google().revoke(decrypt_secret(acc.encrypted_refresh_token))
+
+
 def delete_user_everything(db: Session, email: str) -> None:
     """Removes the account and all its data. Sessions, key and rules go via ON DELETE CASCADE."""
     email = normalize_email(email)
+    revoke_google(db, email)
     db.execute(delete(User).where(User.email == email))
     db.execute(delete(LoginToken).where(LoginToken.email == email))

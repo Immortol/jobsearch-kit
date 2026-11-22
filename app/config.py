@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     agent_model: str = "claude-sonnet-5-5"  # chat model (decision 0009)
     agent_workers: int = 4                  # replies generated at the same time
 
+    # Google OAuth client of the owner's Google Cloud project (decisions 0008, 0012).
+    google_client_id: str = ""
+    google_client_secret: str = ""
+
     @field_validator("database_url")
     @classmethod
     def _psycopg_driver(cls, v: str) -> str:

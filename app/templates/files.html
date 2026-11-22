@@ -13,10 +13,24 @@
       <span class="muted">{{ "PDF" if f.kind == "cv_pdf" else _("Word, to edit") }}</span></li>
     {% endfor %}
   </ul>
+  {% if cv.content.uploaded %}<p class="muted small">{{ _("This is your own file: it goes into packages as it is.") }}</p>{% endif %}
   {% else %}
   <p class="muted">{{ _("No CV yet. It appears here after the first setup meeting.") }}</p>
   <form method="post" action="/setup" class="inline"><button type="submit">{{ _("Start setup") }}</button></form>
   {% endif %}
+  {% if error == "scan" %}<p class="note err">{{ _("This PDF has no text in it (a scan). Upload the Word file or a PDF exported from an editor.") }}</p>{% endif %}
+  <h3>{{ _("Change the CV") }}</h3>
+  <div class="cv-actions">
+    {% if current %}
+    <form method="post" action="/files/cv/edit" class="inline"><button type="submit" class="secondary">{{ _("Change with the assistant") }}</button></form>
+    {% endif %}
+    <form method="post" action="/files/cv" enctype="multipart/form-data" class="upload-form">
+      <label class="attach"><input type="file" name="file" accept=".pdf,.docx" data-attach required>
+        <span aria-hidden="true">📎</span><span class="attach-name" data-attach-name>{{ _("Your own CV: PDF or Word") }}</span></label>
+      <button type="submit" class="secondary">{{ _("Make it the master CV") }}</button>
+    </form>
+  </div>
+  <p class="muted small">{{ _("Your own file is used as it is. A CV adapted to a vacancy is still made in the panel's layout.") }}</p>
 </section>
 
 {% if generated %}
@@ -31,15 +45,39 @@
 </section>
 {% endif %}
 
-{% if uploads %}
+{% if vacancy_docs %}
 <section class="card">
-  <h2>{{ _("Files you sent") }}</h2>
-  <ul class="files">
-    {% for f in uploads %}
-    <li><a href="/files/{{ f.id }}">{{ f.filename }}</a>
-      <span class="muted">{{ f.created_at.strftime("%Y-%m-%d %H:%M") }} UTC</span></li>
-    {% endfor %}
-  </ul>
+  <h2>{{ _("Documents for vacancies") }}</h2>
+  <p>{{ _("Cover letters and adapted CVs are on the card of their vacancy.") }} <a href="/vacancies?f=progress">{{ _("Vacancies in progress") }}</a></p>
 </section>
 {% endif %}
+
+<section class="card" id="attachments">
+  <h2>{{ _("Your files and package attachments") }}</h2>
+  <p class="muted">{{ _("Certificates, diplomas, references: upload them once and mark \"in every package\" — they are added to the folder of each vacancy.") }}</p>
+  {% if error and error != "scan" %}{% with error = "file_" ~ error %}{% include "_composer_error.html" %}{% endwith %}{% endif %}
+  {% if uploads %}
+  <ul class="files attachments">
+    {% for f in uploads %}
+    <li>
+      <a href="/files/{{ f.id }}">{{ f.filename }}</a>
+      <form method="post" action="/files/{{ f.id }}/package" class="inline">
+        <input type="hidden" name="in_package" value="{{ '' if f.in_package else '1' }}">
+        <button type="submit" class="link{% if f.in_package %} on{% endif %}">{{ "✓ " if f.in_package }}{{ _("in every package") }}</button>
+      </form>
+      <form method="post" action="/files/{{ f.id }}/delete" class="inline"
+            hx-confirm="{{ _('Delete this file?') }}" hx-post="/files/{{ f.id }}/delete">
+        <button type="submit" class="link danger">{{ _("Delete") }}</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  <form method="post" action="/files" enctype="multipart/form-data" class="upload-form">
+    <label class="attach"><input type="file" name="file" accept=".pdf,.docx,.jpg,.jpeg,.png" data-attach multiple required>
+      <span aria-hidden="true">📎</span><span class="attach-name" data-attach-name>{{ _("Choose files: PDF, Word, JPG, PNG, up to 5 MB each") }}</span></label>
+    <label class="check"><input type="checkbox" name="in_package" value="1" checked> {{ _("in every package") }}</label>
+    <button type="submit">{{ _("Upload") }}</button>
+  </form>
+</section>
 {% endblock %}

@@ -53,7 +53,7 @@ def clean_tables():
     with get_engine().begin() as conn:
         conn.execute(text(
             "TRUNCATE invites, login_tokens, users, sessions, api_keys, rule_files, chats, "
-            "user_files, cv_versions, questionnaires, "
+            "user_files, cv_versions, questionnaires, vacancies, google_accounts, "
             "chat_messages, usage_records "
             "RESTART IDENTITY CASCADE"
         ))

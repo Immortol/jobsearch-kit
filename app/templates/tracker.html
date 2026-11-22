@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Tracker") }} · Jobsearch Kit{% endblock %}
+{% block content %}
+<h1>{{ _("Tracker") }}</h1>
+<nav class="chips" aria-label="{{ _('Filter') }}">
+  {% for key, label in filters.items() %}
+  <a href="/tracker?f={{ key }}"{% if key == f %} class="on" aria-current="true"{% endif %}>{{ _(label) }}</a>
+  {% endfor %}
+  <a class="csv" href="/tracker.csv">{{ _("Download CSV") }}</a>
+</nav>
+
+{% if rows %}
+<div class="tracker">
+  {% for v in rows %}
+  <div class="trow">
+    <div class="tmain">
+      <a href="/vacancies/{{ v.id }}">{% if v.score %}<span class="score s{{ v.score }}">{{ v.score }}/5</span> {% endif %}{{ title(v) }}</a>
+      <span class="muted small">{{ v.created_at.strftime("%d.%m.%Y") }}{% if v.location %} · {{ v.location }}{% endif %}</span>
+      {% if v.next_step %}<span class="small">{{ v.next_step }}</span>{% endif %}
+    </div>
+    <form method="post" action="/vacancies/{{ v.id }}/status" class="tstatus">
+      <label class="sr-only" for="st-{{ v.id }}">{{ _("Status") }}</label>
+      <select id="st-{{ v.id }}" name="status" data-autosubmit>
+        {% for key, label in statuses %}<option value="{{ key }}"{% if key == v.status %} selected{% endif %}>{{ _(label) }}</option>{% endfor %}
+      </select>
+      <noscript><button type="submit" class="secondary">{{ _("Save") }}</button></noscript>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted">{% if f == "progress" %}{{ _("Nothing in progress yet: vacancies appear here once they have documents or you applied.") }}{% else %}{{ _("Nothing here yet.") }}{% endif %}</p>
+{% endif %}
+{% endblock %}

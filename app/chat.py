@@ -18,12 +18,13 @@ from functools import lru_cache
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app import google_sync
 from app.agent import Progress, build_history, run_reply
 from app.claude import ClaudeClient, ClaudeFailure
 from app.config import get_settings
 from app.db import get_sessionmaker
 from app.files import PDF, get_file
-from app.models import Chat, ChatMessage, UsageRecord, User, UserFile, utcnow
+from app.models import Chat, ChatMessage, UsageRecord, User, UserFile, Vacancy, utcnow
 from app.security import decrypt_secret
 
 
@@ -174,7 +175,8 @@ def _run(message_id: int, client: ClaudeClient, live: LiveReply) -> None:
             client=client, api_key=decrypt_secret(user.api_key.encrypted_key),
             model=get_settings().agent_model, db=db, user=user,
             history=build_history(earlier, lambda fid: file_block(db, user, fid)),
-            progress=_RecordingProgress(live, user.id), chat_id=chat.id,
+            progress=_RecordingProgress(live, user.id), chat_id=chat.id, kind=chat.kind,
+            vacancy_id=chat.vacancy_id,
         )
         reply.choices = result.choices
         reply.text = result.text
@@ -187,7 +189,25 @@ def _run(message_id: int, client: ClaudeClient, live: LiveReply) -> None:
             reply.status = "done"
             reply.error = "step_limit" if result.hit_step_limit else None
         chat.updated_at = utcnow()
+        if chat.kind == "card" and chat.vacancy_id and result.error is None:
+            _settle_card(db, chat, reply)
         db.commit()
+        if chat.vacancy_id and google_sync.account(db, user) is not None:
+            # Google Drive folder and tracker sheet follow the card (decision 0012).
+            google_sync.package_changed(user.id, chat.vacancy_id)
+            google_sync.tracker_changed(db, user)
+
+
+def _settle_card(db: Session, chat: Chat, reply: ChatMessage) -> None:
+    """A card whose assistant forgot `vacancy_update` still leaves "new" and shows its answer."""
+    v = db.get(Vacancy, chat.vacancy_id)
+    if v is None:
+        return
+    if v.status == "new":
+        v.status = "assessed"
+    if not v.summary.strip() and reply.text.strip():
+        v.summary = reply.text.strip()[:20_000]
+    v.updated_at = utcnow()
 
 
 def file_block(db: Session, user: User, file_id: int) -> dict:
